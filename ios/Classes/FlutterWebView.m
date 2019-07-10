@@ -61,6 +61,11 @@
       [_javaScriptChannelNames addObjectsFromArray:javaScriptChannelNames];
       [self registerJavaScriptChannels:_javaScriptChannelNames controller:userContentController];
     }
+    NSString *injectJavascript = args[@"injectJavascript"];
+    if (injectJavascript != (id)[NSNull null]) {
+        WKUserScript *script = [[WKUserScript alloc] initWithSource:injectJavascript injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:YES];
+        [userContentController addUserScript:script];
+    }
 
     WKWebViewConfiguration* configuration = [[WKWebViewConfiguration alloc] init];
     configuration.userContentController = userContentController;

@@ -185,7 +185,13 @@ class WebSettings {
 /// Configuration to use when creating a new [WebViewPlatformController].
 class CreationParams {
   CreationParams(
-      {this.initialUrl, this.webSettings, this.javascriptChannelNames});
+      {this.injectJavascript,
+      this.initialUrl,
+      this.webSettings,
+      this.javascriptChannelNames});
+
+  /// The javascript injected at document start.
+  final String injectJavascript;
 
   /// The initialUrl to load in the webview.
   ///
@@ -212,7 +218,7 @@ class CreationParams {
 
   @override
   String toString() {
-    return '$runtimeType(initialUrl: $initialUrl, settings: $webSettings, javascriptChannelNames: $javascriptChannelNames)';
+    return '$runtimeType(injectJavascript: $injectJavascript, initialUrl: $initialUrl, settings: $webSettings, javascriptChannelNames: $javascriptChannelNames)';
   }
 }
 

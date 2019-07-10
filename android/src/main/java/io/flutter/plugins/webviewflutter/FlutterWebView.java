@@ -42,6 +42,11 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
     flutterWebViewClient = new FlutterWebViewClient(methodChannel);
     applySettings((Map<String, Object>) params.get("settings"));
 
+    if (params.containsKey("injectJavascript")) {
+      String javascript = (String) params.get("injectJavascript");
+      flutterWebViewClient.setInjectJavascript(javascript);
+    }
+
     if (params.containsKey(JS_CHANNEL_NAMES_FIELD)) {
       registerJavaScriptChannelNames((List<String>) params.get(JS_CHANNEL_NAMES_FIELD));
     }

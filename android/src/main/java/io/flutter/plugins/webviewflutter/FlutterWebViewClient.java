@@ -8,6 +8,7 @@ import android.annotation.TargetApi;
 import android.os.Build;
 import android.util.Log;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import androidx.annotation.NonNull;
@@ -15,6 +16,12 @@ import androidx.webkit.WebViewClientCompat;
 import io.flutter.plugin.common.MethodChannel;
 import java.util.HashMap;
 import java.util.Map;
+import java.net.URL;
+import java.net.HttpURLConnection;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.SequenceInputStream;
+
 
 // We need to use WebViewClientCompat to get
 // shouldOverrideUrlLoading(WebView view, WebResourceRequest request)
@@ -24,9 +31,14 @@ class FlutterWebViewClient {
   private static final String TAG = "FlutterWebViewClient";
   private final MethodChannel methodChannel;
   private boolean hasNavigationDelegate;
+  private String injectJS = "";
 
   FlutterWebViewClient(MethodChannel methodChannel) {
     this.methodChannel = methodChannel;
+  }
+
+  public void setInjectJavascript(String javascript) {
+      this.injectJS = javascript;
   }
 
   @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -64,6 +76,50 @@ class FlutterWebViewClient {
         "Using a navigationDelegate with an old webview implementation, pages with frames or iframes will not work");
     notifyOnNavigationRequest(url, null, view, true);
     return true;
+  }
+
+  private HttpURLConnection makeURLConnection(String url, String method, Map<String, String> headers) throws Exception {
+    HttpURLConnection myURLConnection = (HttpURLConnection) new URL(url).openConnection();
+    myURLConnection.setRequestMethod(method);
+    for (Map.Entry<String, String> entry : headers.entrySet()) {
+      myURLConnection.addRequestProperty(entry.getKey(), entry.getValue());
+    }
+    return myURLConnection;
+  }
+
+  public WebResourceResponse shouldInterceptRequest (WebView view, WebResourceRequest request) {
+    if (!request.isForMainFrame()) {
+      return null;
+    }
+
+    try {
+      Map<String, String> headers = request.getRequestHeaders();
+      String method = request.getMethod();
+      HttpURLConnection myURLConnection = makeURLConnection(request.getUrl().toString(), method, headers);
+
+      int status = myURLConnection.getResponseCode();
+      if (status != HttpURLConnection.HTTP_OK) {
+        if (status == HttpURLConnection.HTTP_MOVED_TEMP
+              || status == HttpURLConnection.HTTP_MOVED_PERM
+              || status == HttpURLConnection.HTTP_SEE_OTHER)
+          myURLConnection = makeURLConnection(myURLConnection.getHeaderField("Location"), method, headers);
+      }
+
+      StringBuilder sb = new StringBuilder();
+      sb.append("<script>");
+      sb.append(injectJS);
+      sb.append("</script>");
+      InputStream input = new ByteArrayInputStream(sb.toString().getBytes());
+
+      return new WebResourceResponse("text/html", "UTF-8", new SequenceInputStream(input, myURLConnection.getInputStream()));
+    } catch(Exception e) {
+      StringBuilder sb = new StringBuilder();
+      sb.append("<html>");
+      sb.append(e.toString());
+      sb.append("</html>");
+      InputStream input = new ByteArrayInputStream(sb.toString().getBytes());
+      return new WebResourceResponse("text/html", "UTF-8", input);
+    }
   }
 
   private void onPageFinished(WebView view, String url) {
@@ -110,14 +166,18 @@ class FlutterWebViewClient {
       public void onPageFinished(WebView view, String url) {
         FlutterWebViewClient.this.onPageFinished(view, url);
       }
+
+      @Override
+      public WebResourceResponse shouldInterceptRequest (WebView view, WebResourceRequest request) {
+        return FlutterWebViewClient.this.shouldInterceptRequest(view, request);
+      }
     };
   }
 
   private WebViewClientCompat internalCreateWebViewClientCompat() {
     return new WebViewClientCompat() {
       @Override
-      public boolean shouldOverrideUrlLoading(
-          @NonNull WebView view, @NonNull WebResourceRequest request) {
+      public boolean shouldOverrideUrlLoading(@NonNull WebView view, @NonNull WebResourceRequest request) {
         return FlutterWebViewClient.this.shouldOverrideUrlLoading(view, request);
       }
 
@@ -129,6 +189,11 @@ class FlutterWebViewClient {
       @Override
       public void onPageFinished(WebView view, String url) {
         FlutterWebViewClient.this.onPageFinished(view, url);
+      }
+
+      @Override
+      public WebResourceResponse shouldInterceptRequest (WebView view, WebResourceRequest request) {
+        return FlutterWebViewClient.this.shouldInterceptRequest(view, request);
       }
     };
   }
