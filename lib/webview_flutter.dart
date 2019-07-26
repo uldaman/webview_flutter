@@ -34,7 +34,7 @@ class JavascriptMessage {
 }
 
 /// Callback type for handling messages sent from Javascript running in a web view.
-typedef void JavascriptMessageHandler(JavascriptMessage message);
+typedef dynamic JavascriptMessageHandler(JavascriptMessage message);
 
 /// Information about a navigation action that is about to be executed.
 class NavigationRequest {
@@ -390,8 +390,9 @@ class _PlatformCallbacksHandler implements WebViewPlatformCallbacksHandler {
       <String, JavascriptChannel>{};
 
   @override
-  void onJavaScriptChannelMessage(String channel, String message) {
-    _javascriptChannels[channel].onMessageReceived(JavascriptMessage(message));
+  dynamic onJavaScriptChannelMessage(String channel, String message) {
+    return _javascriptChannels[channel]
+        .onMessageReceived(JavascriptMessage(message));
   }
 
   @override

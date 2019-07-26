@@ -55,22 +55,21 @@
     _channel = [FlutterMethodChannel methodChannelWithName:channelName binaryMessenger:messenger];
     _javaScriptChannelNames = [[NSMutableSet alloc] init];
 
-    WKUserContentController* userContentController = [[WKUserContentController alloc] init];
+    WKWebViewConfiguration* configuration = [[WKWebViewConfiguration alloc] init];
+    configuration.userContentController = [[WKUserContentController alloc] init];;
+    _webView = [[WKWebView alloc] initWithFrame:frame configuration:configuration];
+
     if ([args[@"javascriptChannelNames"] isKindOfClass:[NSArray class]]) {
       NSArray* javaScriptChannelNames = args[@"javascriptChannelNames"];
       [_javaScriptChannelNames addObjectsFromArray:javaScriptChannelNames];
-      [self registerJavaScriptChannels:_javaScriptChannelNames controller:userContentController];
+      [self registerJavaScriptChannels:_javaScriptChannelNames controller:configuration.userContentController];
     }
     NSString *injectJavascript = args[@"injectJavascript"];
     if (injectJavascript != (id)[NSNull null]) {
         WKUserScript *script = [[WKUserScript alloc] initWithSource:injectJavascript injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:YES];
-        [userContentController addUserScript:script];
+        [configuration.userContentController addUserScript:script];
     }
 
-    WKWebViewConfiguration* configuration = [[WKWebViewConfiguration alloc] init];
-    configuration.userContentController = userContentController;
-
-    _webView = [[WKWebView alloc] initWithFrame:frame configuration:configuration];
     _navigationDelegate = [[FLTWKNavigationDelegate alloc] initWithChannel:_channel];
     _webView.UIDelegate = _navigationDelegate;
     _webView.navigationDelegate = _navigationDelegate;
@@ -326,10 +325,19 @@
   for (NSString* channelName in channelNames) {
     FLTJavaScriptChannel* channel =
         [[FLTJavaScriptChannel alloc] initWithMethodChannel:_channel
-                                      javaScriptChannelName:channelName];
+                                      javaScriptChannelName:channelName
+                                      webView:_webView];
     [userContentController addScriptMessageHandler:channel name:channelName];
     NSString* wrapperSource = [NSString
-        stringWithFormat:@"window.%@ = webkit.messageHandlers.%@;", channelName, channelName];
+                               stringWithFormat:@"window.%@ = function() {"
+                               "var _callHandlerID = setTimeout(function(){});"
+                               "webkit.messageHandlers.%@.postMessage( {'_callHandlerID': _callHandlerID, 'args': JSON.stringify(Array.prototype.slice.call(arguments))} );"
+                               "return new Promise(function(resolve, reject) {"
+                               "window.%@[_callHandlerID] = {};"
+                               "window.%@[_callHandlerID]['resolve'] = resolve;"
+                               "window.%@[_callHandlerID]['reject'] = reject;"
+                               "});"
+                               "};", channelName, channelName, channelName, channelName, channelName];
     WKUserScript* wrapperScript =
         [[WKUserScript alloc] initWithSource:wrapperSource
                                injectionTime:WKUserScriptInjectionTimeAtDocumentStart

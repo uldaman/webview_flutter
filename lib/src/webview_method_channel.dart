@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/services.dart';
 
@@ -23,27 +24,29 @@ class MethodChannelWebViewPlatform implements WebViewPlatformController {
   static const MethodChannel _cookieManagerChannel =
       MethodChannel('plugins.flutter.io/cookie_manager');
 
-  Future<bool> _onMethodCall(MethodCall call) async {
+  Future<dynamic> _onMethodCall(MethodCall call) async {
     switch (call.method) {
       case 'javascriptChannelMessage':
         final String channel = call.arguments['channel'];
         final String message = call.arguments['message'];
-        _platformCallbacksHandler.onJavaScriptChannelMessage(channel, message);
-        return true;
+        return jsonEncode(await _platformCallbacksHandler
+            .onJavaScriptChannelMessage(channel, message));
       case 'navigationRequest':
         return _platformCallbacksHandler.onNavigationRequest(
           url: call.arguments['url'],
           isForMainFrame: call.arguments['isForMainFrame'],
         );
+        break;
       case 'onPageFinished':
         _platformCallbacksHandler.onPageFinished(call.arguments['url']);
-        return null;
+        break;
       case 'onProgressChanged':
         _platformCallbacksHandler.onProgressChanged(call.arguments['progress']);
-        return null;
+        break;
+      default:
+        throw MissingPluginException(
+            '${call.method} was invoked but has no handler');
     }
-    throw MissingPluginException(
-        '${call.method} was invoked but has no handler');
   }
 
   @override

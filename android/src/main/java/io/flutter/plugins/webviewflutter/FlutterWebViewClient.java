@@ -87,6 +87,7 @@ class FlutterWebViewClient {
     return myURLConnection;
   }
 
+  @TargetApi(Build.VERSION_CODES.LOLLIPOP)
   public WebResourceResponse shouldInterceptRequest (WebView view, WebResourceRequest request) {
     if (!request.isForMainFrame()) {
       return null;
