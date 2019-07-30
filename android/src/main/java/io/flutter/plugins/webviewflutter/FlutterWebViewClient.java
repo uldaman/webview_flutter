@@ -11,6 +11,8 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.ServiceWorkerController;
+import android.webkit.ServiceWorkerClient;
 import androidx.annotation.NonNull;
 import androidx.webkit.WebViewClientCompat;
 import io.flutter.plugin.common.MethodChannel;
@@ -35,10 +37,77 @@ class FlutterWebViewClient {
 
   FlutterWebViewClient(MethodChannel methodChannel) {
     this.methodChannel = methodChannel;
+
+    ServiceWorkerController swController = ServiceWorkerController.getInstance();
+    swController.setServiceWorkerClient(new ServiceWorkerClient() {
+        @Override
+        public WebResourceResponse shouldInterceptRequest(WebResourceRequest request) {
+          try {
+            Map<String, String> headers = request.getRequestHeaders();
+            String method = request.getMethod();
+            HttpURLConnection connection = makeURLConnection(request.getUrl().toString(), method, headers);
+            if (connection.getContentType().contains("text/html")) {
+              return interceptRequest(connection);
+            }
+          } catch(Exception e) {
+          }
+          return super.shouldInterceptRequest(request);
+        }
+    });
   }
 
   public void setInjectJavascript(String javascript) {
       this.injectJS = javascript;
+  }
+
+  private HttpURLConnection makeURLConnection(String url, String method, Map<String, String> headers) throws Exception {
+    HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+    connection.setRequestMethod(method);
+    for (Map.Entry<String, String> entry : headers.entrySet()) {
+      connection.addRequestProperty(entry.getKey(), entry.getValue());
+    }
+
+    int status = connection.getResponseCode();
+    if (status == HttpURLConnection.HTTP_MOVED_TEMP
+          || status == HttpURLConnection.HTTP_MOVED_PERM
+          || status == HttpURLConnection.HTTP_SEE_OTHER)
+      return makeURLConnection(connection.getHeaderField("Location"), method, headers);
+    return connection;
+  }
+
+  private WebResourceResponse interceptRequest(HttpURLConnection connection) throws Exception {
+    StringBuilder sb = new StringBuilder();
+    sb.append("<script>");
+    sb.append(injectJS);
+    sb.append("</script>");
+    InputStream input = new ByteArrayInputStream(sb.toString().getBytes());
+
+    String mimeType = "text/html";
+    String charset = "UTF-8";
+    for (String value : connection.getContentType().split(";")) {
+      value = value.trim();
+      if (value.toLowerCase().startsWith("charset=")) {
+        charset = value.substring("charset=".length());
+      } else {
+        mimeType = value;
+      }
+    }
+
+    return new WebResourceResponse(mimeType, charset, new SequenceInputStream(input, connection.getInputStream()));
+  }
+
+  @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+  public WebResourceResponse shouldInterceptRequest (WebView view, WebResourceRequest request) {
+    if (request.isForMainFrame()) {
+      try {
+        Map<String, String> headers = request.getRequestHeaders();
+        String method = request.getMethod();
+        HttpURLConnection connection = makeURLConnection(request.getUrl().toString(), method, headers);
+        return interceptRequest(connection);
+      } catch(Exception e) {
+      }
+    }
+    return null;
   }
 
   @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -76,51 +145,6 @@ class FlutterWebViewClient {
         "Using a navigationDelegate with an old webview implementation, pages with frames or iframes will not work");
     notifyOnNavigationRequest(url, null, view, true);
     return true;
-  }
-
-  private HttpURLConnection makeURLConnection(String url, String method, Map<String, String> headers) throws Exception {
-    HttpURLConnection myURLConnection = (HttpURLConnection) new URL(url).openConnection();
-    myURLConnection.setRequestMethod(method);
-    for (Map.Entry<String, String> entry : headers.entrySet()) {
-      myURLConnection.addRequestProperty(entry.getKey(), entry.getValue());
-    }
-    return myURLConnection;
-  }
-
-  @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-  public WebResourceResponse shouldInterceptRequest (WebView view, WebResourceRequest request) {
-    if (!request.isForMainFrame()) {
-      return null;
-    }
-
-    try {
-      Map<String, String> headers = request.getRequestHeaders();
-      String method = request.getMethod();
-      HttpURLConnection myURLConnection = makeURLConnection(request.getUrl().toString(), method, headers);
-
-      int status = myURLConnection.getResponseCode();
-      if (status != HttpURLConnection.HTTP_OK) {
-        if (status == HttpURLConnection.HTTP_MOVED_TEMP
-              || status == HttpURLConnection.HTTP_MOVED_PERM
-              || status == HttpURLConnection.HTTP_SEE_OTHER)
-          myURLConnection = makeURLConnection(myURLConnection.getHeaderField("Location"), method, headers);
-      }
-
-      StringBuilder sb = new StringBuilder();
-      sb.append("<script>");
-      sb.append(injectJS);
-      sb.append("</script>");
-      InputStream input = new ByteArrayInputStream(sb.toString().getBytes());
-
-      return new WebResourceResponse("text/html", "UTF-8", new SequenceInputStream(input, myURLConnection.getInputStream()));
-    } catch(Exception e) {
-      StringBuilder sb = new StringBuilder();
-      sb.append("<html>");
-      sb.append(e.toString());
-      sb.append("</html>");
-      InputStream input = new ByteArrayInputStream(sb.toString().getBytes());
-      return new WebResourceResponse("text/html", "UTF-8", input);
-    }
   }
 
   private void onPageFinished(WebView view, String url) {
