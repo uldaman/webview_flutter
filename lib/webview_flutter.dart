@@ -22,19 +22,8 @@ enum JavascriptMode {
   unrestricted,
 }
 
-/// A message that was sent by JavaScript code running in a [WebView].
-class JavascriptMessage {
-  /// Constructs a JavaScript message object.
-  ///
-  /// The `message` parameter must not be null.
-  const JavascriptMessage(this.message) : assert(message != null);
-
-  /// The contents of the message that was sent by the JavaScript code.
-  final String message;
-}
-
 /// Callback type for handling messages sent from Javascript running in a web view.
-typedef dynamic JavascriptMessageHandler(JavascriptMessage message);
+typedef dynamic JavascriptMessageHandler(List<dynamic> arguments);
 
 /// Information about a navigation action that is about to be executed.
 class NavigationRequest {
@@ -195,13 +184,13 @@ class WebView extends StatefulWidget {
   /// For example for the following JavascriptChannel:
   ///
   /// ```dart
-  /// JavascriptChannel(name: 'Print', onMessageReceived: (JavascriptMessage message) { print(message.message); });
+  /// JavascriptChannel(name: 'Print', onMessageReceived: (List<dynamic> arguments) { print(arguments); });
   /// ```
   ///
   /// JavaScript code can call:
   ///
   /// ```javascript
-  /// Print.postMessage('Hello');
+  /// Print('Hello');
   /// ```
   ///
   /// To asynchronously invoke the message handler which will print the message to standard output.
@@ -390,9 +379,8 @@ class _PlatformCallbacksHandler implements WebViewPlatformCallbacksHandler {
       <String, JavascriptChannel>{};
 
   @override
-  dynamic onJavaScriptChannelMessage(String channel, String message) {
-    return _javascriptChannels[channel]
-        .onMessageReceived(JavascriptMessage(message));
+  dynamic onJavaScriptChannelMessage(String channel, List<dynamic> arguments) {
+    return _javascriptChannels[channel].onMessageReceived(arguments);
   }
 
   @override

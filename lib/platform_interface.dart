@@ -16,7 +16,7 @@ import 'webview_flutter.dart';
 /// [WebViewPlatformController] is notifying this handler on events that happened on the platform's webview.
 abstract class WebViewPlatformCallbacksHandler {
   /// Invoked by [WebViewPlatformController] when a JavaScript channel message is received.
-  dynamic onJavaScriptChannelMessage(String channel, String message);
+  dynamic onJavaScriptChannelMessage(String channel, List<dynamic> arguments);
 
   /// Invoked by [WebViewPlatformController] when a navigation request is pending.
   ///

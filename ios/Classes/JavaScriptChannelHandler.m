@@ -31,7 +31,7 @@
            @"Can't send a message to an unitialized JavaScript channel.");
   NSDictionary* arguments = @{
     @"channel" : _javaScriptChannelName,
-    @"message" : [NSString stringWithFormat:@"%@", message.body]
+    @"arguments" : [NSString stringWithFormat:@"%@", message.body[@"args"]]
   };
   NSString* jsMethod = [NSString stringWithFormat:@"window.%@[%@]", _javaScriptChannelName, message.body[@"_callHandlerID"]];
   [_methodChannel invokeMethod:@"javascriptChannelMessage" arguments:arguments result:^(FlutterResult _Nullable result) {

@@ -434,9 +434,9 @@ void main() {
         // ignore: prefer_collection_literals
         javascriptChannels: <JavascriptChannel>[
           JavascriptChannel(
-              name: 'Tts', onMessageReceived: (JavascriptMessage msg) {}),
+              name: 'Tts', onMessageReceived: (List<dynamic> msg) {}),
           JavascriptChannel(
-              name: 'Alarm', onMessageReceived: (JavascriptMessage msg) {}),
+              name: 'Alarm', onMessageReceived: (List<dynamic> msg) {}),
         ].toSet(),
       ),
     );
@@ -449,7 +449,7 @@ void main() {
   });
 
   test('Only valid JavaScript channel names are allowed', () {
-    final JavascriptMessageHandler noOp = (JavascriptMessage msg) {};
+    final JavascriptMessageHandler noOp = (List<dynamic> msg) {};
     JavascriptChannel(name: 'Tts1', onMessageReceived: noOp);
     JavascriptChannel(name: '_Alarm', onMessageReceived: noOp);
 
@@ -473,9 +473,9 @@ void main() {
         // ignore: prefer_collection_literals
         javascriptChannels: <JavascriptChannel>[
           JavascriptChannel(
-              name: 'Alarm', onMessageReceived: (JavascriptMessage msg) {}),
+              name: 'Alarm', onMessageReceived: (List<dynamic> msg) {}),
           JavascriptChannel(
-              name: 'Alarm', onMessageReceived: (JavascriptMessage msg) {}),
+              name: 'Alarm', onMessageReceived: (List<dynamic> msg) {}),
         ].toSet(),
       ),
     );
@@ -490,9 +490,9 @@ void main() {
         // ignore: prefer_collection_literals
         javascriptChannels: <JavascriptChannel>[
           JavascriptChannel(
-              name: 'Tts', onMessageReceived: (JavascriptMessage msg) {}),
+              name: 'Tts', onMessageReceived: (List<dynamic> msg) {}),
           JavascriptChannel(
-              name: 'Alarm', onMessageReceived: (JavascriptMessage msg) {}),
+              name: 'Alarm', onMessageReceived: (List<dynamic> msg) {}),
         ].toSet(),
       ),
     );
@@ -504,11 +504,11 @@ void main() {
         // ignore: prefer_collection_literals
         javascriptChannels: <JavascriptChannel>[
           JavascriptChannel(
-              name: 'Tts', onMessageReceived: (JavascriptMessage msg) {}),
+              name: 'Tts', onMessageReceived: (List<dynamic> msg) {}),
           JavascriptChannel(
-              name: 'Alarm2', onMessageReceived: (JavascriptMessage msg) {}),
+              name: 'Alarm2', onMessageReceived: (List<dynamic> msg) {}),
           JavascriptChannel(
-              name: 'Alarm3', onMessageReceived: (JavascriptMessage msg) {}),
+              name: 'Alarm3', onMessageReceived: (List<dynamic> msg) {}),
         ].toSet(),
       ),
     );
@@ -533,7 +533,7 @@ void main() {
         // ignore: prefer_collection_literals
         javascriptChannels: <JavascriptChannel>[
           JavascriptChannel(
-              name: 'Tts', onMessageReceived: (JavascriptMessage msg) {}),
+              name: 'Tts', onMessageReceived: (List<dynamic> msg) {}),
         ].toSet(),
       ),
     );
@@ -551,7 +551,7 @@ void main() {
         // ignore: prefer_collection_literals
         javascriptChannels: <JavascriptChannel>[
           JavascriptChannel(
-              name: 'Tts', onMessageReceived: (JavascriptMessage msg) {}),
+              name: 'Tts', onMessageReceived: (List<dynamic> msg) {}),
         ].toSet(),
       ),
     );
@@ -564,8 +564,8 @@ void main() {
   });
 
   testWidgets('JavaScript channel messages', (WidgetTester tester) async {
-    final List<String> ttsMessagesReceived = <String>[];
-    final List<String> alarmMessagesReceived = <String>[];
+    final List<List<dynamic>> ttsMessagesReceived = <List<dynamic>>[];
+    final List<List<dynamic>> alarmMessagesReceived = <List<dynamic>>[];
     await tester.pumpWidget(
       WebView(
         initialUrl: 'https://youtube.com',
@@ -574,13 +574,13 @@ void main() {
         javascriptChannels: <JavascriptChannel>[
           JavascriptChannel(
               name: 'Tts',
-              onMessageReceived: (JavascriptMessage msg) {
-                ttsMessagesReceived.add(msg.message);
+              onMessageReceived: (List<dynamic> msg) {
+                ttsMessagesReceived.add(msg);
               }),
           JavascriptChannel(
               name: 'Alarm',
-              onMessageReceived: (JavascriptMessage msg) {
-                alarmMessagesReceived.add(msg.message);
+              onMessageReceived: (List<dynamic> msg) {
+                alarmMessagesReceived.add(msg);
               }),
         ].toSet(),
       ),

@@ -28,9 +28,9 @@ class MethodChannelWebViewPlatform implements WebViewPlatformController {
     switch (call.method) {
       case 'javascriptChannelMessage':
         final String channel = call.arguments['channel'];
-        final String message = call.arguments['message'];
+        final List<dynamic> arguments = jsonDecode(call.arguments['arguments']);
         return jsonEncode(await _platformCallbacksHandler
-            .onJavaScriptChannelMessage(channel, message));
+            .onJavaScriptChannelMessage(channel, arguments));
       case 'navigationRequest':
         return _platformCallbacksHandler.onNavigationRequest(
           url: call.arguments['url'],
