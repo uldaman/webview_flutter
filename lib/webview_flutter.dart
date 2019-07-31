@@ -61,6 +61,9 @@ typedef NavigationDecision NavigationDelegate(NavigationRequest navigation);
 /// Signature for when a [WebView] has finished loading a page.
 typedef void PageFinishedCallback(String url);
 
+/// Signature for when a [WebView] has started loading a page.
+typedef void PageStartedCallback(String url);
+
 /// Signature for when the current [progress] of loading a page is changed.
 typedef void ProgressChangedCallback(double progress);
 
@@ -113,6 +116,7 @@ class WebView extends StatefulWidget {
     this.navigationDelegate,
     this.gestureRecognizers,
     this.onPageFinished,
+    this.onPageStarted,
     this.onProgressChanged,
     this.debuggingEnabled = false,
   })  : assert(javascriptMode != null),
@@ -238,6 +242,9 @@ class WebView extends StatefulWidget {
   /// directly in the HTML has been loaded and code injected with
   /// [WebViewController.evaluateJavascript] can assume this.
   final PageFinishedCallback onPageFinished;
+
+  /// Invoked when a page has started loading.
+  final PageStartedCallback onPageStarted;
 
   /// Invoked by [WebViewPlatformController] when the current [progress]
   /// (range 0-1.0) of loading a page is changed.
@@ -396,6 +403,13 @@ class _PlatformCallbacksHandler implements WebViewPlatformCallbacksHandler {
   void onPageFinished(String url) {
     if (_widget.onPageFinished != null) {
       _widget.onPageFinished(url);
+    }
+  }
+
+  @override
+  void onPageStarted(String url) {
+    if (_widget.onPageStarted != null) {
+      _widget.onPageStarted(url);
     }
   }
 
