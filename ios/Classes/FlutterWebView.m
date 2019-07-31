@@ -38,7 +38,6 @@
   WKWebView* _webView;
   int64_t _viewId;
   FlutterMethodChannel* _channel;
-  NSString* _currentUrl;
   // The set of registered JavaScript channel names.
   NSMutableSet* _javaScriptChannelNames;
   FLTWKNavigationDelegate* _navigationDelegate;
@@ -122,6 +121,8 @@
     [self onReload:call result:result];
   } else if ([[call method] isEqualToString:@"currentUrl"]) {
     [self onCurrentUrl:call result:result];
+  } else if ([[call method] isEqualToString:@"currentTitle"]) {
+    [self onCurrentTitle:call result:result];
   } else if ([[call method] isEqualToString:@"evaluateJavascript"]) {
     [self onEvaluateJavaScript:call result:result];
   } else if ([[call method] isEqualToString:@"addJavascriptChannels"]) {
@@ -181,8 +182,11 @@
 }
 
 - (void)onCurrentUrl:(FlutterMethodCall*)call result:(FlutterResult)result {
-  _currentUrl = [[_webView URL] absoluteString];
-  result(_currentUrl);
+  result([[_webView URL] absoluteString]);
+}
+
+- (void)onCurrentTitle:(FlutterMethodCall*)call result:(FlutterResult)result {
+  result([[_webView title] absoluteString]);
 }
 
 - (void)onEvaluateJavaScript:(FlutterMethodCall*)call result:(FlutterResult)result {

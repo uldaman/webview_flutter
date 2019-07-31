@@ -480,6 +480,11 @@ class WebViewController {
     return _webViewPlatformController.currentUrl();
   }
 
+  /// Accessor to the current title that the WebView is displaying.
+  Future<String> currentTitle() {
+    return _webViewPlatformController.currentTitle();
+  }
+
   /// Checks whether there's a back history item.
   ///
   /// Note that this operation is asynchronous, and it is possible that the "canGoBack" state has

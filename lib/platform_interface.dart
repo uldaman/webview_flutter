@@ -79,6 +79,12 @@ abstract class WebViewPlatformController {
         "WebView currentUrl is not implemented on the current platform");
   }
 
+  /// Accessor to the current title that the WebView is displaying.
+  Future<String> currentTitle() {
+    throw UnimplementedError(
+        "WebView currentTitle is not implemented on the current platform");
+  }
+
   /// Checks whether there's a back history item.
   Future<bool> canGoBack() {
     throw UnimplementedError(

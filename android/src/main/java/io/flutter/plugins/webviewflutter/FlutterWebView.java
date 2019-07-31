@@ -114,6 +114,9 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
       case "currentUrl":
         currentUrl(result);
         break;
+      case "currentTitle":
+        currentTitle(result);
+        break;
       case "evaluateJavascript":
         evaluateJavaScript(methodCall, result);
         break;
@@ -172,6 +175,10 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
 
   private void currentUrl(Result result) {
     result.success(webView.getUrl());
+  }
+
+  private void currentTitle(Result result) {
+    result.success(webView.getTitle());
   }
 
   @SuppressWarnings("unchecked")
