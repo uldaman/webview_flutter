@@ -125,6 +125,8 @@
     [self onCurrentTitle:call result:result];
   } else if ([[call method] isEqualToString:@"evaluateJavascript"]) {
     [self onEvaluateJavaScript:call result:result];
+  } else if ([[call method] isEqualToString:@"takeScreenshot"]) {
+    [self onTakeScreenshot:call result:result];
   } else if ([[call method] isEqualToString:@"addJavascriptChannels"]) {
     [self onAddJavaScriptChannels:call result:result];
   } else if ([[call method] isEqualToString:@"removeJavascriptChannels"]) {
@@ -186,7 +188,18 @@
 }
 
 - (void)onCurrentTitle:(FlutterMethodCall*)call result:(FlutterResult)result {
-  result([[_webView title] absoluteString]);
+  result([_webView title]);
+}
+
+- (void)onTakeScreenshot:(FlutterMethodCall*)call result:(FlutterResult)result {
+    [_webView takeSnapshotWithConfiguration:nil
+                              completionHandler:^(UIImage * _Nullable snapshotImage, NSError * _Nullable error) {
+                                  if (snapshotImage) {
+                                    result(UIImagePNGRepresentation(snapshotImage));
+                                  } else {
+                                    result(nil);
+                                  }
+                              }];
 }
 
 - (void)onEvaluateJavaScript:(FlutterMethodCall*)call result:(FlutterResult)result {

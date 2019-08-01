@@ -4,6 +4,7 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 
@@ -70,6 +71,10 @@ class MethodChannelWebViewPlatform implements WebViewPlatformController {
   @override
   Future<String> currentTitle() =>
       _channel.invokeMethod<String>('currentTitle');
+
+  @override
+  Future<Uint8List> takeScreenshot() =>
+      _channel.invokeMethod<Uint8List>('takeScreenshot');
 
   @override
   Future<bool> canGoBack() => _channel.invokeMethod<bool>("canGoBack");

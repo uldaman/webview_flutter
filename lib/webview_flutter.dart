@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -483,6 +484,11 @@ class WebViewController {
   /// Accessor to the current title that the WebView is displaying.
   Future<String> currentTitle() {
     return _webViewPlatformController.currentTitle();
+  }
+
+  /// Takes a screenshot (in PNG format) of the WebView's visible viewport and returns a `Uint8List`. Returns `null` if it wasn't be able to take it.
+  Future<Uint8List> takeScreenshot() {
+    return _webViewPlatformController.takeScreenshot();
   }
 
   /// Checks whether there's a back history item.
