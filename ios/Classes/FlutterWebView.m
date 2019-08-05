@@ -210,7 +210,8 @@
                                details:nil]);
     return;
   }
-  [_webView evaluateJavaScript:jsString
+  NSString* jsWrapper = [NSString stringWithFormat:@"(function(){return JSON.stringify(eval(`%@`));})();", jsString];
+  [_webView evaluateJavaScript:jsWrapper
              completionHandler:^(_Nullable id evaluateResult, NSError* _Nullable error) {
                if (error) {
                  result([FlutterError
