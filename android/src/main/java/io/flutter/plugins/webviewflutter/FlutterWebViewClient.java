@@ -4,6 +4,7 @@
 
 package io.flutter.plugins.webviewflutter;
 
+import android.graphics.Bitmap;
 import android.annotation.TargetApi;
 import android.os.Build;
 import android.util.Log;
@@ -199,7 +200,7 @@ class FlutterWebViewClient {
       }
 
       @Override
-      public void onPageStarted(WebView view, String url) {
+      public void onPageStarted(WebView view, String url, Bitmap favicon) {
         FlutterWebViewClient.this.onPageStarted(view, url);
       }
 
@@ -228,7 +229,7 @@ class FlutterWebViewClient {
       }
 
       @Override
-      public void onPageStarted(WebView view, String url) {
+      public void onPageStarted(WebView view, String url, Bitmap favicon) {
         FlutterWebViewClient.this.onPageStarted(view, url);
       }
 
