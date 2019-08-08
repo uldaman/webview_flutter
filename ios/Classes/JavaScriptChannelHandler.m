@@ -6,19 +6,15 @@
 
 @implementation FLTJavaScriptChannel {
   FlutterMethodChannel* _methodChannel;
-  NSString* _javaScriptChannelName;
   WKWebView* _webView;
 }
 
 - (instancetype)initWithMethodChannel:(FlutterMethodChannel*)methodChannel
-                javaScriptChannelName:(NSString*)javaScriptChannelName
                 webView:(WKWebView*)webView {
   self = [super init];
   NSAssert(methodChannel != nil, @"methodChannel must not be null.");
-  NSAssert(javaScriptChannelName != nil, @"javaScriptChannelName must not be null.");
   if (self) {
     _methodChannel = methodChannel;
-    _javaScriptChannelName = javaScriptChannelName;
     _webView = webView;
   }
   return self;
@@ -27,22 +23,19 @@
 - (void)userContentController:(WKUserContentController*)userContentController
       didReceiveScriptMessage:(WKScriptMessage*)message {
   NSAssert(_methodChannel != nil, @"Can't send a message to an unitialized JavaScript channel.");
-  NSAssert(_javaScriptChannelName != nil,
-           @"Can't send a message to an unitialized JavaScript channel.");
   NSDictionary* arguments = @{
-    @"channel" : _javaScriptChannelName,
-    @"arguments" : [NSString stringWithFormat:@"%@", message.body[@"args"]]
+    @"handler" : message.body[@"handler"],
+    @"arguments" : message.body[@"args"]
   };
-  NSString* jsMethod = [NSString stringWithFormat:@"window.%@[%@]", _javaScriptChannelName, message.body[@"_callHandlerID"]];
   [_methodChannel invokeMethod:@"javascriptChannelMessage" arguments:arguments result:^(FlutterResult _Nullable result) {
       if (result == FlutterMethodNotImplemented) {
         return;
       }
       if ([result isKindOfClass:[FlutterError class]]) {
-        [self->_webView evaluateJavaScript:[NSString stringWithFormat:@"%@['reject'](`%@`); delete %@;", jsMethod, [result message], jsMethod] completionHandler:nil];
+        [self->_webView evaluateJavaScript:[NSString stringWithFormat:@"window.flutter_webview_fail(%@, `%@`);", message.body[@"_postID"], [result message]] completionHandler:nil];
         return;
       }
-      [self->_webView evaluateJavaScript:[NSString stringWithFormat:@"%@['resolve'](%@); delete %@;", jsMethod, result, jsMethod] completionHandler:nil];
+      [self->_webView evaluateJavaScript:[NSString stringWithFormat:@"window.flutter_webview_succeed(%@, %@);", message.body[@"_postID"], result] completionHandler:nil];
   }];
 }
 

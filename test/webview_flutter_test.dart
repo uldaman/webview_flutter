@@ -432,10 +432,10 @@ void main() {
         initialUrl: 'https://youtube.com',
         // TODO(iskakaushik): Remove this when collection literals makes it to stable.
         // ignore: prefer_collection_literals
-        javascriptChannels: <JavascriptChannel>[
-          JavascriptChannel(
+        javascriptHandlers: <JavascriptHandler>[
+          JavascriptHandler(
               name: 'Tts', onMessageReceived: (List<dynamic> msg) {}),
-          JavascriptChannel(
+          JavascriptHandler(
               name: 'Alarm', onMessageReceived: (List<dynamic> msg) {}),
         ].toSet(),
       ),
@@ -444,18 +444,18 @@ void main() {
     final FakePlatformWebView platformWebView =
         fakePlatformViewsController.lastCreatedView;
 
-    expect(platformWebView.javascriptChannelNames,
+    expect(platformWebView.JavascriptHandlerNames,
         unorderedEquals(<String>['Tts', 'Alarm']));
   });
 
   test('Only valid JavaScript channel names are allowed', () {
     final JavascriptMessageHandler noOp = (List<dynamic> msg) {};
-    JavascriptChannel(name: 'Tts1', onMessageReceived: noOp);
-    JavascriptChannel(name: '_Alarm', onMessageReceived: noOp);
+    JavascriptHandler(name: 'Tts1', onMessageReceived: noOp);
+    JavascriptHandler(name: '_Alarm', onMessageReceived: noOp);
 
     VoidCallback createChannel(String name) {
       return () {
-        JavascriptChannel(name: name, onMessageReceived: noOp);
+        JavascriptHandler(name: name, onMessageReceived: noOp);
       };
     }
 
@@ -471,10 +471,10 @@ void main() {
         initialUrl: 'https://youtube.com',
         // TODO(iskakaushik): Remove this when collection literals makes it to stable.
         // ignore: prefer_collection_literals
-        javascriptChannels: <JavascriptChannel>[
-          JavascriptChannel(
+        javascriptHandlers: <JavascriptHandler>[
+          JavascriptHandler(
               name: 'Alarm', onMessageReceived: (List<dynamic> msg) {}),
-          JavascriptChannel(
+          JavascriptHandler(
               name: 'Alarm', onMessageReceived: (List<dynamic> msg) {}),
         ].toSet(),
       ),
@@ -488,10 +488,10 @@ void main() {
         initialUrl: 'https://youtube.com',
         // TODO(iskakaushik): Remove this when collection literals makes it to stable.
         // ignore: prefer_collection_literals
-        javascriptChannels: <JavascriptChannel>[
-          JavascriptChannel(
+        javascriptHandlers: <JavascriptHandler>[
+          JavascriptHandler(
               name: 'Tts', onMessageReceived: (List<dynamic> msg) {}),
-          JavascriptChannel(
+          JavascriptHandler(
               name: 'Alarm', onMessageReceived: (List<dynamic> msg) {}),
         ].toSet(),
       ),
@@ -502,12 +502,12 @@ void main() {
         initialUrl: 'https://youtube.com',
         // TODO(iskakaushik): Remove this when collection literals makes it to stable.
         // ignore: prefer_collection_literals
-        javascriptChannels: <JavascriptChannel>[
-          JavascriptChannel(
+        javascriptHandlers: <JavascriptHandler>[
+          JavascriptHandler(
               name: 'Tts', onMessageReceived: (List<dynamic> msg) {}),
-          JavascriptChannel(
+          JavascriptHandler(
               name: 'Alarm2', onMessageReceived: (List<dynamic> msg) {}),
-          JavascriptChannel(
+          JavascriptHandler(
               name: 'Alarm3', onMessageReceived: (List<dynamic> msg) {}),
         ].toSet(),
       ),
@@ -516,23 +516,23 @@ void main() {
     final FakePlatformWebView platformWebView =
         fakePlatformViewsController.lastCreatedView;
 
-    expect(platformWebView.javascriptChannelNames,
+    expect(platformWebView.JavascriptHandlerNames,
         unorderedEquals(<String>['Tts', 'Alarm2', 'Alarm3']));
   });
 
   testWidgets('Remove all JavaScript channels and then add',
       (WidgetTester tester) async {
-    // This covers a specific bug we had where after updating javascriptChannels to null,
+    // This covers a specific bug we had where after updating javascriptHandlers to null,
     // updating it again with a subset of the previously registered channels fails as the
-    // widget's cache of current channel wasn't properly updated when updating javascriptChannels to
+    // widget's cache of current channel wasn't properly updated when updating javascriptHandlers to
     // null.
     await tester.pumpWidget(
       WebView(
         initialUrl: 'https://youtube.com',
         // TODO(iskakaushik): Remove this when collection literals makes it to stable.
         // ignore: prefer_collection_literals
-        javascriptChannels: <JavascriptChannel>[
-          JavascriptChannel(
+        javascriptHandlers: <JavascriptHandler>[
+          JavascriptHandler(
               name: 'Tts', onMessageReceived: (List<dynamic> msg) {}),
         ].toSet(),
       ),
@@ -549,8 +549,8 @@ void main() {
         initialUrl: 'https://youtube.com',
         // TODO(iskakaushik): Remove this when collection literals makes it to stable.
         // ignore: prefer_collection_literals
-        javascriptChannels: <JavascriptChannel>[
-          JavascriptChannel(
+        javascriptHandlers: <JavascriptHandler>[
+          JavascriptHandler(
               name: 'Tts', onMessageReceived: (List<dynamic> msg) {}),
         ].toSet(),
       ),
@@ -559,7 +559,7 @@ void main() {
     final FakePlatformWebView platformWebView =
         fakePlatformViewsController.lastCreatedView;
 
-    expect(platformWebView.javascriptChannelNames,
+    expect(platformWebView.JavascriptHandlerNames,
         unorderedEquals(<String>['Tts']));
   });
 
@@ -571,13 +571,13 @@ void main() {
         initialUrl: 'https://youtube.com',
         // TODO(iskakaushik): Remove this when collection literals makes it to stable.
         // ignore: prefer_collection_literals
-        javascriptChannels: <JavascriptChannel>[
-          JavascriptChannel(
+        javascriptHandlers: <JavascriptHandler>[
+          JavascriptHandler(
               name: 'Tts',
               onMessageReceived: (List<dynamic> msg) {
                 ttsMessagesReceived.add(msg);
               }),
-          JavascriptChannel(
+          JavascriptHandler(
               name: 'Alarm',
               onMessageReceived: (List<dynamic> msg) {
                 alarmMessagesReceived.add(msg);
@@ -779,7 +779,6 @@ void main() {
             ),
             // TODO(iskakaushik): Remove this when collection literals makes it to stable.
             // ignore: prefer_collection_literals
-            javascriptChannelNames: Set<String>(),
           )));
     });
 
@@ -818,9 +817,9 @@ class FakePlatformWebView {
         currentPosition++;
       }
     }
-    if (params.containsKey('javascriptChannelNames')) {
-      javascriptChannelNames =
-          List<String>.from(params['javascriptChannelNames']);
+    if (params.containsKey('JavascriptHandlerNames')) {
+      JavascriptHandlerNames =
+          List<String>.from(params['JavascriptHandlerNames']);
     }
     javascriptMode = JavascriptMode.values[params['settings']['jsMode']];
     hasNavigationDelegate =
@@ -841,7 +840,7 @@ class FakePlatformWebView {
 
   String get currentUrl => history.isEmpty ? null : history[currentPosition];
   JavascriptMode javascriptMode;
-  List<String> javascriptChannelNames;
+  List<String> JavascriptHandlerNames;
 
   bool hasNavigationDelegate;
   bool debuggingEnabled;
@@ -886,15 +885,6 @@ class FakePlatformWebView {
       case 'evaluateJavascript':
         return Future<dynamic>.value(call.arguments);
         break;
-      case 'addJavascriptChannels':
-        final List<String> channelNames = List<String>.from(call.arguments);
-        javascriptChannelNames.addAll(channelNames);
-        break;
-      case 'removeJavascriptChannels':
-        final List<String> channelNames = List<String>.from(call.arguments);
-        javascriptChannelNames
-            .removeWhere((String channel) => channelNames.contains(channel));
-        break;
       case 'clearCache':
         hasCache = false;
         return Future<void>.sync(() {});
@@ -909,7 +899,7 @@ class FakePlatformWebView {
       'message': message
     };
     final ByteData data = codec
-        .encodeMethodCall(MethodCall('javascriptChannelMessage', arguments));
+        .encodeMethodCall(MethodCall('JavascriptHandlerMessage', arguments));
     // TODO(hterkelsen): Remove this when defaultBinaryMessages is in stable.
     // https://github.com/flutter/flutter/issues/33446
     // ignore: deprecated_member_use
@@ -1110,8 +1100,6 @@ class MatchesCreationParams extends Matcher {
       Map<dynamic, dynamic> matchState) {
     return _creationParams.initialUrl == creationParams.initialUrl &&
         MatchesWebSettings(_creationParams.webSettings)
-            .matches(creationParams.webSettings, matchState) &&
-        orderedEquals(_creationParams.javascriptChannelNames)
-            .matches(creationParams.javascriptChannelNames, matchState);
+            .matches(creationParams.webSettings, matchState);
   }
 }

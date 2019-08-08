@@ -38,8 +38,6 @@
   WKWebView* _webView;
   int64_t _viewId;
   FlutterMethodChannel* _channel;
-  // The set of registered JavaScript channel names.
-  NSMutableSet* _javaScriptChannelNames;
   FLTWKNavigationDelegate* _navigationDelegate;
 }
 
@@ -52,17 +50,12 @@
 
     NSString* channelName = [NSString stringWithFormat:@"plugins.flutter.io/webview_%lld", viewId];
     _channel = [FlutterMethodChannel methodChannelWithName:channelName binaryMessenger:messenger];
-    _javaScriptChannelNames = [[NSMutableSet alloc] init];
 
     WKWebViewConfiguration* configuration = [[WKWebViewConfiguration alloc] init];
     configuration.userContentController = [[WKUserContentController alloc] init];;
     _webView = [[WKWebView alloc] initWithFrame:frame configuration:configuration];
 
-    if ([args[@"javascriptChannelNames"] isKindOfClass:[NSArray class]]) {
-      NSArray* javaScriptChannelNames = args[@"javascriptChannelNames"];
-      [_javaScriptChannelNames addObjectsFromArray:javaScriptChannelNames];
-      [self registerJavaScriptChannels:_javaScriptChannelNames controller:configuration.userContentController];
-    }
+    [self registerJavaScriptChannels:configuration.userContentController];
     NSString *injectJavascript = args[@"injectJavascript"];
     if (injectJavascript != (id)[NSNull null]) {
         WKUserScript *script = [[WKUserScript alloc] initWithSource:injectJavascript injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:YES];
@@ -127,10 +120,6 @@
     [self onEvaluateJavaScript:call result:result];
   } else if ([[call method] isEqualToString:@"takeScreenshot"]) {
     [self onTakeScreenshot:call result:result];
-  } else if ([[call method] isEqualToString:@"addJavascriptChannels"]) {
-    [self onAddJavaScriptChannels:call result:result];
-  } else if ([[call method] isEqualToString:@"removeJavascriptChannels"]) {
-    [self onRemoveJavaScriptChannels:call result:result];
   } else if ([[call method] isEqualToString:@"clearCache"]) {
     [self clearCache:result];
   } else {
@@ -225,33 +214,6 @@
              }];
 }
 
-- (void)onAddJavaScriptChannels:(FlutterMethodCall*)call result:(FlutterResult)result {
-  NSArray* channelNames = [call arguments];
-  NSSet* channelNamesSet = [[NSSet alloc] initWithArray:channelNames];
-  [_javaScriptChannelNames addObjectsFromArray:channelNames];
-  [self registerJavaScriptChannels:channelNamesSet
-                        controller:_webView.configuration.userContentController];
-  result(nil);
-}
-
-- (void)onRemoveJavaScriptChannels:(FlutterMethodCall*)call result:(FlutterResult)result {
-  // WkWebView does not support removing a single user script, so instead we remove all
-  // user scripts, all message handlers. And re-register channels that shouldn't be removed.
-  [_webView.configuration.userContentController removeAllUserScripts];
-  for (NSString* channelName in _javaScriptChannelNames) {
-    [_webView.configuration.userContentController removeScriptMessageHandlerForName:channelName];
-  }
-
-  NSArray* channelNamesToRemove = [call arguments];
-  for (NSString* channelName in channelNamesToRemove) {
-    [_javaScriptChannelNames removeObject:channelName];
-  }
-
-  [self registerJavaScriptChannels:_javaScriptChannelNames
-                        controller:_webView.configuration.userContentController];
-  result(nil);
-}
-
 - (void)clearCache:(FlutterResult)result {
   if (@available(iOS 9.0, *)) {
     NSSet* cacheDataTypes = [WKWebsiteDataStore allWebsiteDataTypes];
@@ -338,30 +300,52 @@
   return true;
 }
 
-- (void)registerJavaScriptChannels:(NSSet*)channelNames
-                        controller:(WKUserContentController*)userContentController {
-  for (NSString* channelName in channelNames) {
-    FLTJavaScriptChannel* channel =
-        [[FLTJavaScriptChannel alloc] initWithMethodChannel:_channel
-                                      javaScriptChannelName:channelName
-                                      webView:_webView];
-    [userContentController addScriptMessageHandler:channel name:channelName];
-    NSString* wrapperSource = [NSString
-                               stringWithFormat:@"window.%@ = function() {"
-                               "var _callHandlerID = setTimeout(function(){});"
-                               "webkit.messageHandlers.%@.postMessage( {'_callHandlerID': _callHandlerID, 'args': JSON.stringify(Array.prototype.slice.call(arguments))} );"
-                               "return new Promise(function(resolve, reject) {"
-                               "window.%@[_callHandlerID] = {};"
-                               "window.%@[_callHandlerID]['resolve'] = resolve;"
-                               "window.%@[_callHandlerID]['reject'] = reject;"
-                               "});"
-                               "};", channelName, channelName, channelName, channelName, channelName];
-    WKUserScript* wrapperScript =
-        [[WKUserScript alloc] initWithSource:wrapperSource
-                               injectionTime:WKUserScriptInjectionTimeAtDocumentStart
-                            forMainFrameOnly:NO];
-    [userContentController addUserScript:wrapperScript];
-  }
+- (void)registerJavaScriptChannels:(WKUserContentController*)userContentController {
+  FLTJavaScriptChannel* channel =
+      [[FLTJavaScriptChannel alloc] initWithMethodChannel:_channel
+                                                  webView:_webView];
+  [userContentController addScriptMessageHandler:channel name:@"flutter_webview_post"];
+  NSString* wrapperSource = @"(() => {"
+      "var _callbacks = {};"
+      "var _flutter_webview_post = webkit.messageHandlers.flutter_webview_post;"
+      "var _f = (promise, postID, ...args) => {"
+          "if (_callbacks.hasOwnProperty(postID)) {"
+              "if (_callbacks[postID].hasOwnProperty(promise)) {"
+                  "_callbacks[postID][promise](...args);"
+              "};"
+              "delete _callbacks[postID];"
+          "};"
+      "};"
+      "Object.defineProperty(window, 'flutter_webview_succeed', {"
+          "value: (postID, ...args) => {"
+              "_f('resolve', postID, ...args);"
+          "},"
+          "writable: false"
+      "});"
+      "Object.defineProperty(window, 'flutter_webview_fail', {"
+          "value: (postID, ...args) => {"
+              "_f('reject', postID, ...args);"
+          "},"
+          "writable: false"
+      "});"
+      "Object.defineProperty(window, 'flutter_webview_post', {"
+          "value: (handler, ...args) => {"
+              "var _postID = setTimeout(() => { });"
+              "_flutter_webview_post.postMessage({ 'handler': handler, '_postID': _postID, 'args': JSON.stringify(args) });"
+              "return new Promise((resolve, reject) => {"
+                  "_callbacks[_postID] = {};"
+                  "_callbacks[_postID]['resolve'] = resolve;"
+                  "_callbacks[_postID]['reject'] = reject;"
+              "});"
+          "},"
+          "writable: false"
+      "});"
+  "})()";
+  WKUserScript* wrapperScript =
+      [[WKUserScript alloc] initWithSource:wrapperSource
+                             injectionTime:WKUserScriptInjectionTimeAtDocumentStart
+                          forMainFrameOnly:YES];
+  [userContentController addUserScript:wrapperScript];
 }
 
 @end

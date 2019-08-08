@@ -17,7 +17,7 @@ import 'webview_flutter.dart';
 /// [WebViewPlatformController] is notifying this handler on events that happened on the platform's webview.
 abstract class WebViewPlatformCallbacksHandler {
   /// Invoked by [WebViewPlatformController] when a JavaScript channel message is received.
-  dynamic onJavaScriptChannelMessage(String channel, List<dynamic> arguments);
+  dynamic onJavaScriptChannelMessage(String handler, List<dynamic> arguments);
 
   /// Invoked by [WebViewPlatformController] when a navigation request is pending.
   ///
@@ -147,31 +147,6 @@ abstract class WebViewPlatformController {
     throw UnimplementedError(
         "WebView evaluateJavascript is not implemented on the current platform");
   }
-
-  /// Adds new JavaScript channels to the set of enabled channels.
-  ///
-  /// For each value in this list the platform's webview should make sure that a corresponding
-  /// property with a postMessage method is set on `window`. For example for a JavaScript channel
-  /// named `Foo` it should be possible for JavaScript code executing in the webview to do
-  ///
-  /// ```javascript
-  /// Foo.postMessage('hello');
-  /// ```
-  ///
-  /// See also: [CreationParams.javascriptChannelNames].
-  Future<void> addJavascriptChannels(Set<String> javascriptChannelNames) {
-    throw UnimplementedError(
-        "WebView addJavascriptChannels is not implemented on the current platform");
-  }
-
-  /// Removes JavaScript channel names from the set of enabled channels.
-  ///
-  /// This disables channels that were previously enabled by [addJavaScriptChannels] or through
-  /// [CreationParams.javascriptChannelNames].
-  Future<void> removeJavascriptChannels(Set<String> javascriptChannelNames) {
-    throw UnimplementedError(
-        "WebView removeJavascriptChannels is not implemented on the current platform");
-  }
 }
 
 /// Settings for configuring a WebViewPlatform.
@@ -204,11 +179,7 @@ class WebSettings {
 
 /// Configuration to use when creating a new [WebViewPlatformController].
 class CreationParams {
-  CreationParams(
-      {this.injectJavascript,
-      this.initialUrl,
-      this.webSettings,
-      this.javascriptChannelNames});
+  CreationParams({this.injectJavascript, this.initialUrl, this.webSettings});
 
   /// The javascript injected at document start.
   final String injectJavascript;
@@ -223,22 +194,9 @@ class CreationParams {
   /// This can later be updated with [WebViewPlatformController.updateSettings].
   final WebSettings webSettings;
 
-  /// The initial set of JavaScript channels that are configured for this webview.
-  ///
-  /// For each value in this set the platform's webview should make sure that a corresponding
-  /// property with a postMessage method is set on `window`. For example for a JavaScript channel
-  /// named `Foo` it should be possible for JavaScript code executing in the webview to do
-  ///
-  /// ```javascript
-  /// Foo.postMessage('hello');
-  /// ```
-  // TODO(amirh): describe what should happen when postMessage is called once that code is migrated
-  // to PlatformWebView.
-  final Set<String> javascriptChannelNames;
-
   @override
   String toString() {
-    return '$runtimeType(injectJavascript: $injectJavascript, initialUrl: $initialUrl, settings: $webSettings, javascriptChannelNames: $javascriptChannelNames)';
+    return '$runtimeType(injectJavascript: $injectJavascript, initialUrl: $initialUrl, settings: $webSettings)';
   }
 }
 

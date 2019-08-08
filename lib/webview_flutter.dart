@@ -68,23 +68,23 @@ typedef void PageStartedCallback(String url);
 /// Signature for when the current [progress] of loading a page is changed.
 typedef void ProgressChangedCallback(double progress);
 
-final RegExp _validChannelNames = RegExp('^[a-zA-Z_][a-zA-Z0-9]*\$');
+final RegExp _validHandlerNames = RegExp('^[a-zA-Z_][a-zA-Z0-9]*\$');
 
-/// A named channel for receiving messaged from JavaScript code running inside a web view.
-class JavascriptChannel {
-  /// Constructs a Javascript channel.
+/// A named handler for receiving messaged from JavaScript code running inside a web view.
+class JavascriptHandler {
+  /// Constructs a Javascript handler.
   ///
   /// The parameters `name` and `onMessageReceived` must not be null.
-  JavascriptChannel({
+  JavascriptHandler({
     @required this.name,
     @required this.onMessageReceived,
   })  : assert(name != null),
         assert(onMessageReceived != null),
-        assert(_validChannelNames.hasMatch(name));
+        assert(_validHandlerNames.hasMatch(name));
 
-  /// The channel's name.
+  /// The handler's name.
   ///
-  /// Passing this channel object as part of a [WebView.javascriptChannels] adds a channel object to
+  /// Passing this handler object as part of a [WebView.javascriptHandlers] adds a handler object to
   /// the Javascript window object's property named `name`.
   ///
   /// The name must start with a letter or underscore(_), followed by any combination of those
@@ -92,10 +92,10 @@ class JavascriptChannel {
   ///
   /// Note that any JavaScript existing `window` property with this name will be overriden.
   ///
-  /// See also [WebView.javascriptChannels] for more details on the channel registration mechanism.
+  /// See also [WebView.javascriptHandlers] for more details on the handler registration mechanism.
   final String name;
 
-  /// A callback that's invoked when a message is received through the channel.
+  /// A callback that's invoked when a message is received through the handler.
   final JavascriptMessageHandler onMessageReceived;
 }
 
@@ -113,7 +113,7 @@ class WebView extends StatefulWidget {
     this.injectJavascript,
     this.initialUrl,
     this.javascriptMode = JavascriptMode.disabled,
-    this.javascriptChannels,
+    this.javascriptHandlers,
     this.navigationDelegate,
     this.gestureRecognizers,
     this.onPageFinished,
@@ -179,17 +179,17 @@ class WebView extends StatefulWidget {
   /// Whether Javascript execution is enabled.
   final JavascriptMode javascriptMode;
 
-  /// The set of [JavascriptChannel]s available to JavaScript code running in the web view.
+  /// The set of [JavascriptHandler]s available to JavaScript code running in the web view.
   ///
-  /// For each [JavascriptChannel] in the set, a channel object is made available for the
-  /// JavaScript code in a window property named [JavascriptChannel.name].
+  /// For each [JavascriptHandler] in the set, a handler object is made available for the
+  /// JavaScript code in a window property named [JavascriptHandler.name].
   /// The JavaScript code can then call `postMessage` on that object to send a message that will be
-  /// passed to [JavascriptChannel.onMessageReceived].
+  /// passed to [JavascriptHandler.onMessageReceived].
   ///
-  /// For example for the following JavascriptChannel:
+  /// For example for the following JavascriptHandler:
   ///
   /// ```dart
-  /// JavascriptChannel(name: 'Print', onMessageReceived: (List<dynamic> arguments) { print(arguments); });
+  /// JavascriptHandler(name: 'Print', onMessageReceived: (List<dynamic> arguments) { print(arguments); });
   /// ```
   ///
   /// JavaScript code can call:
@@ -200,13 +200,13 @@ class WebView extends StatefulWidget {
   ///
   /// To asynchronously invoke the message handler which will print the message to standard output.
   ///
-  /// Adding a new JavaScript channel only takes affect after the next page is loaded.
+  /// Adding a new JavaScript handler only takes affect after the next page is loaded.
   ///
-  /// Set values must not be null. A [JavascriptChannel.name] cannot be the same for multiple
-  /// channels in the list.
+  /// Set values must not be null. A [JavascriptHandler.name] cannot be the same for multiple
+  /// handlers in the list.
   ///
   /// A null value is equivalent to an empty set.
-  final Set<JavascriptChannel> javascriptChannels;
+  final Set<JavascriptHandler> javascriptHandlers;
 
   /// A delegate function that decides how to handle navigation actions.
   ///
@@ -288,14 +288,14 @@ class _WebViewState extends State<WebView> {
   @override
   void initState() {
     super.initState();
-    _assertJavascriptChannelNamesAreUnique();
+    _assertJavascriptHandlerNamesAreUnique();
     _platformCallbacksHandler = _PlatformCallbacksHandler(widget);
   }
 
   @override
   void didUpdateWidget(WebView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _assertJavascriptChannelNamesAreUnique();
+    _assertJavascriptHandlerNamesAreUnique();
     _controller.future.then((WebViewController controller) {
       _platformCallbacksHandler._widget = widget;
       controller._updateWidget(widget);
@@ -311,13 +311,13 @@ class _WebViewState extends State<WebView> {
     }
   }
 
-  void _assertJavascriptChannelNamesAreUnique() {
-    if (widget.javascriptChannels == null ||
-        widget.javascriptChannels.isEmpty) {
+  void _assertJavascriptHandlerNamesAreUnique() {
+    if (widget.javascriptHandlers == null ||
+        widget.javascriptHandlers.isEmpty) {
       return;
     }
-    assert(_extractChannelNames(widget.javascriptChannels).length ==
-        widget.javascriptChannels.length);
+    assert(_extractHandlerNames(widget.javascriptHandlers).length ==
+        widget.javascriptHandlers.length);
   }
 }
 
@@ -326,7 +326,6 @@ CreationParams _creationParamsfromWidget(WebView widget) {
     injectJavascript: widget.injectJavascript,
     initialUrl: widget.initialUrl,
     webSettings: _webSettingsFromWidget(widget),
-    javascriptChannelNames: _extractChannelNames(widget.javascriptChannels),
   );
 }
 
@@ -366,29 +365,29 @@ WebSettings _clearUnchangedWebSettings(
       debuggingEnabled: debuggingEnabled);
 }
 
-Set<String> _extractChannelNames(Set<JavascriptChannel> channels) {
-  final Set<String> channelNames = channels == null
+Set<String> _extractHandlerNames(Set<JavascriptHandler> handlers) {
+  final Set<String> handlerNames = handlers == null
       // TODO(iskakaushik): Remove this when collection literals makes it to stable.
       // ignore: prefer_collection_literals
       ? Set<String>()
-      : channels.map((JavascriptChannel channel) => channel.name).toSet();
-  return channelNames;
+      : handlers.map((JavascriptHandler handler) => handler.name).toSet();
+  return handlerNames;
 }
 
 class _PlatformCallbacksHandler implements WebViewPlatformCallbacksHandler {
   _PlatformCallbacksHandler(this._widget) {
-    _updateJavascriptChannelsFromSet(_widget.javascriptChannels);
+    _updateJavascriptHandlers(_widget.javascriptHandlers);
   }
 
   WebView _widget;
 
-  // Maps a channel name to a channel.
-  final Map<String, JavascriptChannel> _javascriptChannels =
-      <String, JavascriptChannel>{};
+  // Maps a handler name to a handler.
+  final Map<String, JavascriptHandler> _javascriptHandlers =
+      <String, JavascriptHandler>{};
 
   @override
-  dynamic onJavaScriptChannelMessage(String channel, List<dynamic> arguments) {
-    return _javascriptChannels[channel].onMessageReceived(arguments);
+  dynamic onJavaScriptChannelMessage(String handler, List<dynamic> arguments) {
+    return _javascriptHandlers[handler].onMessageReceived(arguments);
   }
 
   @override
@@ -421,13 +420,13 @@ class _PlatformCallbacksHandler implements WebViewPlatformCallbacksHandler {
     }
   }
 
-  void _updateJavascriptChannelsFromSet(Set<JavascriptChannel> channels) {
-    _javascriptChannels.clear();
-    if (channels == null) {
+  void _updateJavascriptHandlers(Set<JavascriptHandler> handlers) {
+    _javascriptHandlers.clear();
+    if (handlers == null) {
       return;
     }
-    for (JavascriptChannel channel in channels) {
-      _javascriptChannels[channel.name] = channel;
+    for (JavascriptHandler handler in handlers) {
+      _javascriptHandlers[handler.name] = handler;
     }
   }
 }
@@ -544,7 +543,7 @@ class WebViewController {
   Future<void> _updateWidget(WebView widget) async {
     _widget = widget;
     await _updateSettings(_webSettingsFromWidget(widget));
-    await _updateJavascriptChannels(widget.javascriptChannels);
+    await _updateJavascriptHandlers(widget.javascriptHandlers);
   }
 
   Future<void> _updateSettings(WebSettings newSettings) {
@@ -554,22 +553,9 @@ class WebViewController {
     return _webViewPlatformController.updateSettings(update);
   }
 
-  Future<void> _updateJavascriptChannels(
-      Set<JavascriptChannel> newChannels) async {
-    final Set<String> currentChannels =
-        _platformCallbacksHandler._javascriptChannels.keys.toSet();
-    final Set<String> newChannelNames = _extractChannelNames(newChannels);
-    final Set<String> channelsToAdd =
-        newChannelNames.difference(currentChannels);
-    final Set<String> channelsToRemove =
-        currentChannels.difference(newChannelNames);
-    if (channelsToRemove.isNotEmpty) {
-      _webViewPlatformController.removeJavascriptChannels(channelsToRemove);
-    }
-    if (channelsToAdd.isNotEmpty) {
-      _webViewPlatformController.addJavascriptChannels(channelsToAdd);
-    }
-    _platformCallbacksHandler._updateJavascriptChannelsFromSet(newChannels);
+  Future<void> _updateJavascriptHandlers(
+      Set<JavascriptHandler> newHandlers) async {
+    _platformCallbacksHandler._updateJavascriptHandlers(newHandlers);
   }
 
   /// Evaluates a JavaScript expression in the context of the current page.

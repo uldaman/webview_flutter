@@ -28,10 +28,10 @@ class MethodChannelWebViewPlatform implements WebViewPlatformController {
   Future<dynamic> _onMethodCall(MethodCall call) async {
     switch (call.method) {
       case 'javascriptChannelMessage':
-        final String channel = call.arguments['channel'];
+        final String handler = call.arguments['handler'];
         final List<dynamic> arguments = jsonDecode(call.arguments['arguments']);
         return jsonEncode(await _platformCallbacksHandler
-            .onJavaScriptChannelMessage(channel, arguments));
+            .onJavaScriptChannelMessage(handler, arguments));
       case 'navigationRequest':
         return _platformCallbacksHandler.onNavigationRequest(
           url: call.arguments['url'],
@@ -109,18 +109,6 @@ class MethodChannelWebViewPlatform implements WebViewPlatformController {
         'evaluateJavascript', javascriptString);
   }
 
-  @override
-  Future<void> addJavascriptChannels(Set<String> javascriptChannelNames) {
-    return _channel.invokeMethod<void>(
-        'addJavascriptChannels', javascriptChannelNames.toList());
-  }
-
-  @override
-  Future<void> removeJavascriptChannels(Set<String> javascriptChannelNames) {
-    return _channel.invokeMethod<void>(
-        'removeJavascriptChannels', javascriptChannelNames.toList());
-  }
-
   /// Method channel mplementation for [WebViewPlatform.clearCookies].
   static Future<bool> clearCookies() {
     return _cookieManagerChannel
@@ -153,7 +141,6 @@ class MethodChannelWebViewPlatform implements WebViewPlatformController {
       'injectJavascript': creationParams.injectJavascript,
       'initialUrl': creationParams.initialUrl,
       'settings': _webSettingsToMap(creationParams.webSettings),
-      'javascriptChannelNames': creationParams.javascriptChannelNames.toList(),
     };
   }
 }
