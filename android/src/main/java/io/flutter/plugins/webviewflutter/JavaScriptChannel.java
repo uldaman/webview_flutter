@@ -1,7 +1,3 @@
-// Copyright 2019 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 package io.flutter.plugins.webviewflutter;
 
 import android.os.Handler;
@@ -10,45 +6,84 @@ import android.webkit.JavascriptInterface;
 import io.flutter.plugin.common.MethodChannel;
 import java.util.HashMap;
 
-/**
- * Added as a JavaScript interface to the WebView for any JavaScript channel that the Dart code sets
- * up.
- *
- * <p>Exposes a single method named `postMessage` to JavaScript, which sends a message over a method
- * channel to the Dart code.
- */
 class JavaScriptChannel {
   private final MethodChannel methodChannel;
-  private final String javaScriptChannelName;
   private final Handler platformThreadHandler;
+  private final InputAwareWebView webView;
 
-  /**
-   * @param methodChannel the Flutter WebView method channel to which JS messages are sent
-   * @param javaScriptChannelName the name of the JavaScript channel, this is sent over the method
-   *     channel with each message to let the Dart code know which JavaScript channel the message
-   *     was sent through
-   */
   JavaScriptChannel(
-      MethodChannel methodChannel, String javaScriptChannelName, Handler platformThreadHandler) {
+          InputAwareWebView webView, MethodChannel methodChannel, Handler platformThreadHandler) {
     this.methodChannel = methodChannel;
-    this.javaScriptChannelName = javaScriptChannelName;
     this.platformThreadHandler = platformThreadHandler;
+    this.webView = webView;
   }
 
-  // Suppressing unused warning as this is invoked from JavaScript.
+  public static String jsChannelScript = "(() => {" +
+      "var _callbacks = {};" +
+      "var _flutter_webview = window.flutter_webview;" +
+      "var _f = (promise, postID, ...args) => {" +
+          "if (_callbacks.hasOwnProperty(postID)) {" +
+              "if (_callbacks[postID].hasOwnProperty(promise)) {" +
+                  "_callbacks[postID][promise](...args);" +
+              "};" +
+              "delete _callbacks[postID];" +
+          "};" +
+      "};" +
+      "Object.defineProperty(window, 'flutter_webview_succeed', {" +
+          "value: (postID, ...args) => {" +
+              "_f('resolve', postID, ...args);" +
+          "}," +
+          "writable: false" +
+      "});" +
+      "Object.defineProperty(window, 'flutter_webview_fail', {" +
+          "value: (postID, ...args) => {" +
+              "_f('reject', postID, ...args);" +
+          "}," +
+          "writable: false" +
+      "});" +
+      "Object.defineProperty(window, 'flutter_webview_post', {" +
+          "value: (handler, ...args) => {" +
+              "var _postID = setTimeout(() => { });" +
+              "_flutter_webview.postMessage(handler, _postID, JSON.stringify(args));" +
+              "return new Promise((resolve, reject) => {" +
+                  "_callbacks[_postID] = {};" +
+                  "_callbacks[_postID]['resolve'] = resolve;" +
+                  "_callbacks[_postID]['reject'] = reject;" +
+              "});" +
+          "}," +
+          "writable: false" +
+      "});" +
+  "})()";
+
   @SuppressWarnings("unused")
   @JavascriptInterface
-  public void postMessage(final String message) {
+  public void postMessage(final String handler, final String _postID, final String args) {
     Runnable postMessageRunnable =
         new Runnable() {
           @Override
           public void run() {
             HashMap<String, String> arguments = new HashMap<>();
-            arguments.put("channel", javaScriptChannelName);
-            arguments.put("message", message);
-            methodChannel.invokeMethod("javascriptChannelMessage", arguments);
+            arguments.put("handler", handler);
+            arguments.put("arguments", args);
+            methodChannel.invokeMethod("javascriptChannelMessage", arguments, new MethodChannel.Result() {
+                @Override
+                public void success(Object json) {
+                  webView.evaluateJavascript("window.flutter_webview_succeed(" + _postID + "," + json + ");", null);
+                }
+
+                @Override
+                public void error(String s, String s1, Object o) {
+                 webView.evaluateJavascript("window.flutter_webview_fail(" + _postID + ",`" + s + " " + s1 + "`);", null);
+                }
+
+                @Override
+                public void notImplemented() {
+                }
+              }
+            );
           }
         };
+
     if (platformThreadHandler.getLooper() == Looper.myLooper()) {
       postMessageRunnable.run();
     } else {

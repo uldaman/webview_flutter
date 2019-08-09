@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 
 public class FlutterWebView implements PlatformView, MethodCallHandler {
-  private static final String JS_CHANNEL_NAMES_FIELD = "javascriptChannelNames";
   private final InputAwareWebView webView;
   private final MethodChannel methodChannel;
   private final FlutterWebViewClient flutterWebViewClient;
@@ -52,9 +51,8 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
       flutterWebViewClient.setInjectJavascript(javascript);
     }
 
-    if (params.containsKey(JS_CHANNEL_NAMES_FIELD)) {
-      registerJavaScriptChannelNames((List<String>) params.get(JS_CHANNEL_NAMES_FIELD));
-    }
+    webView.addJavascriptInterface(
+        new JavaScriptChannel(webView, methodChannel, platformThreadHandler), "flutter_webview");
 
     if (params.containsKey("initialUrl")) {
       String url = (String) params.get("initialUrl");
@@ -119,12 +117,6 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
         break;
       case "evaluateJavascript":
         evaluateJavaScript(methodCall, result);
-        break;
-      case "addJavascriptChannels":
-        addJavaScriptChannels(methodCall, result);
-        break;
-      case "removeJavascriptChannels":
-        removeJavaScriptChannels(methodCall, result);
         break;
       case "clearCache":
         clearCache(result);
@@ -203,22 +195,6 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
         });
   }
 
-  @SuppressWarnings("unchecked")
-  private void addJavaScriptChannels(MethodCall methodCall, Result result) {
-    List<String> channelNames = (List<String>) methodCall.arguments;
-    registerJavaScriptChannelNames(channelNames);
-    result.success(null);
-  }
-
-  @SuppressWarnings("unchecked")
-  private void removeJavaScriptChannels(MethodCall methodCall, Result result) {
-    List<String> channelNames = (List<String>) methodCall.arguments;
-    for (String channelName : channelNames) {
-      webView.removeJavascriptInterface(channelName);
-    }
-    result.success(null);
-  }
-
   private void clearCache(Result result) {
     webView.clearCache(true);
     WebStorage.getInstance().deleteAllData();
@@ -260,13 +236,6 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
         break;
       default:
         throw new IllegalArgumentException("Trying to set unknown JavaScript mode: " + mode);
-    }
-  }
-
-  private void registerJavaScriptChannelNames(List<String> channelNames) {
-    for (String channelName : channelNames) {
-      webView.addJavascriptInterface(
-          new JavaScriptChannel(methodChannel, channelName, platformThreadHandler), channelName);
     }
   }
 
