@@ -304,10 +304,10 @@
   FLTJavaScriptChannel* channel =
       [[FLTJavaScriptChannel alloc] initWithMethodChannel:_channel
                                                   webView:_webView];
-  [userContentController addScriptMessageHandler:channel name:@"flutter_webview_post"];
+  [userContentController addScriptMessageHandler:channel name:@"flutter_webview"];
   NSString* wrapperSource = @"(() => {"
       "var _callbacks = {};"
-      "var _flutter_webview_post = webkit.messageHandlers.flutter_webview_post;"
+      "var _flutter_webview = webkit.messageHandlers.flutter_webview;"
       "var _f = (promise, postID, ...args) => {"
           "if (_callbacks.hasOwnProperty(postID)) {"
               "if (_callbacks[postID].hasOwnProperty(promise)) {"
@@ -331,7 +331,7 @@
       "Object.defineProperty(window, 'flutter_webview_post', {"
           "value: (handler, ...args) => {"
               "var _postID = setTimeout(() => { });"
-              "_flutter_webview_post.postMessage({ 'handler': handler, '_postID': _postID, 'args': JSON.stringify(args) });"
+              "_flutter_webview.postMessage({ 'handler': handler, '_postID': _postID, 'args': JSON.stringify(args) });"
               "return new Promise((resolve, reject) => {"
                   "_callbacks[_postID] = {};"
                   "_callbacks[_postID]['resolve'] = resolve;"
