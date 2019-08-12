@@ -15,7 +15,6 @@ A WebView Plugin for Flutter.
   s.source_files = 'Classes/**/*'
   s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
-  
-  s.ios.deployment_target = '8.0'
-end
 
+  s.ios.deployment_target = '11.0'
+end
