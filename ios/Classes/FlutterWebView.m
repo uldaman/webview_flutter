@@ -230,6 +230,20 @@
   }
 }
 
+-(void)dealloc {
+    if (_webView != nil) {
+        [_webView stopLoading];
+        [_webView loadHTMLString:@"" baseURL:nil];
+        [_webView setNavigationDelegate:nil];
+        [_webView setUIDelegate:nil];
+        [_webView.configuration.userContentController removeScriptMessageHandlerForName:@"flutter_webview"];
+        [_webView.configuration.userContentController removeAllUserScripts];
+        [_webView removeObserver:self forKeyPath:@"estimatedProgress"];
+        [_webView removeFromSuperview];
+        _webView = nil;
+    }
+}
+
 // Returns nil when successful, or an error message when one or more keys are unknown.
 - (NSString*)applySettings:(NSDictionary<NSString*, id>*)settings {
   NSMutableArray<NSString*>* unknownKeys = [[NSMutableArray alloc] init];
