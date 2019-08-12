@@ -10,6 +10,7 @@ class JavaScriptChannel {
   private final MethodChannel methodChannel;
   private final Handler platformThreadHandler;
   private final InputAwareWebView webView;
+  private String preloadjs;
 
   JavaScriptChannel(
           InputAwareWebView webView, MethodChannel methodChannel, Handler platformThreadHandler) {
@@ -18,42 +19,44 @@ class JavaScriptChannel {
     this.webView = webView;
   }
 
-  public static String jsChannelScript = "(() => {" +
-      "var _callbacks = {};" +
-      "var _flutter_webview = window.flutter_webview;" +
-      "var _f = (promise, postID, ...args) => {" +
-          "if (_callbacks.hasOwnProperty(postID)) {" +
-              "if (_callbacks[postID].hasOwnProperty(promise)) {" +
-                  "_callbacks[postID][promise](...args);" +
-              "};" +
-              "delete _callbacks[postID];" +
+  private String jsChannelScript = "var _callbacks = {};" +
+  "var _flutter_webview = window.flutter_webview;" +
+  "var _f = (promise, postID, ...args) => {" +
+      "if (_callbacks.hasOwnProperty(postID)) {" +
+          "if (_callbacks[postID].hasOwnProperty(promise)) {" +
+              "_callbacks[postID][promise](...args);" +
           "};" +
+          "delete _callbacks[postID];" +
       "};" +
-      "Object.defineProperty(window, 'flutter_webview_succeed', {" +
-          "value: (postID, ...args) => {" +
-              "_f('resolve', postID, ...args);" +
-          "}," +
-          "writable: false" +
-      "});" +
-      "Object.defineProperty(window, 'flutter_webview_fail', {" +
-          "value: (postID, ...args) => {" +
-              "_f('reject', postID, ...args);" +
-          "}," +
-          "writable: false" +
-      "});" +
-      "Object.defineProperty(window, 'flutter_webview_post', {" +
-          "value: (handler, ...args) => {" +
-              "var _postID = setTimeout(() => { });" +
-              "_flutter_webview.postMessage(handler, _postID, JSON.stringify(args));" +
-              "return new Promise((resolve, reject) => {" +
-                  "_callbacks[_postID] = {};" +
-                  "_callbacks[_postID]['resolve'] = resolve;" +
-                  "_callbacks[_postID]['reject'] = reject;" +
-              "});" +
-          "}," +
-          "writable: false" +
-      "});" +
-  "})()";
+  "};" +
+  "Object.defineProperty(window, 'flutter_webview_succeed', {" +
+      "value: (postID, ...args) => {" +
+          "_f('resolve', postID, ...args);" +
+      "}," +
+      "writable: false" +
+  "});" +
+  "Object.defineProperty(window, 'flutter_webview_fail', {" +
+      "value: (postID, ...args) => {" +
+          "_f('reject', postID, ...args);" +
+      "}," +
+      "writable: false" +
+  "});" +
+  "Object.defineProperty(window, 'flutter_webview_post', {" +
+      "value: (handler, ...args) => {" +
+          "var _postID = setTimeout(() => { });" +
+          "_flutter_webview.postMessage(handler, _postID, JSON.stringify(args));" +
+          "return new Promise((resolve, reject) => {" +
+              "_callbacks[_postID] = {};" +
+              "_callbacks[_postID]['resolve'] = resolve;" +
+              "_callbacks[_postID]['reject'] = reject;" +
+          "});" +
+      "}," +
+      "writable: false" +
+  "});";
+
+  public void setPreloadJavascript(String jscode) {
+    this.preloadjs = jscode;
+  }
 
   @SuppressWarnings("unused")
   @JavascriptInterface
@@ -89,5 +92,11 @@ class JavaScriptChannel {
     } else {
       platformThreadHandler.post(postMessageRunnable);
     }
+  }
+
+  @SuppressWarnings("unused")
+  @JavascriptInterface
+  public String getPreloadjs() {
+    return "(() => {" + jsChannelScript + preloadjs + "})();";
   }
 }

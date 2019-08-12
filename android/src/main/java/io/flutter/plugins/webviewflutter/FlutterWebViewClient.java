@@ -34,7 +34,6 @@ class FlutterWebViewClient {
   private static final String TAG = "FlutterWebViewClient";
   private final MethodChannel methodChannel;
   private boolean hasNavigationDelegate;
-  private String injectJS = "";
 
   FlutterWebViewClient(MethodChannel methodChannel) {
     this.methodChannel = methodChannel;
@@ -57,10 +56,6 @@ class FlutterWebViewClient {
     });
   }
 
-  public void setInjectJavascript(String javascript) {
-      this.injectJS = javascript;
-  }
-
   private HttpURLConnection makeURLConnection(String url, String method, Map<String, String> headers) throws Exception {
     HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
     connection.setRequestMethod(method);
@@ -79,7 +74,7 @@ class FlutterWebViewClient {
   private WebResourceResponse interceptRequest(HttpURLConnection connection) throws Exception {
     StringBuilder sb = new StringBuilder();
     sb.append("<script>");
-    sb.append(injectJS);
+    sb.append("eval(flutter_webview.getPreloadjs());");
     sb.append("</script>");
     InputStream input = new ByteArrayInputStream(sb.toString().getBytes());
 
