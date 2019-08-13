@@ -18,8 +18,12 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.platform.PlatformView;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Picture;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 public class FlutterWebView implements PlatformView, MethodCallHandler {
   private final InputAwareWebView webView;
@@ -116,6 +120,9 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
       case "evaluateJavascript":
         evaluateJavaScript(methodCall, result);
         break;
+      case "takeScreenshot":
+        takeScreenshot(result);
+        break;
       case "clearCache":
         clearCache(result);
         break;
@@ -191,6 +198,22 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
             result.success(value);
           }
         });
+  }
+
+  private void takeScreenshot(Result result) {
+    Picture picture = webView.capturePicture();
+    Bitmap b = Bitmap.createBitmap(webView.getWidth(), webView.getHeight(), Bitmap.Config.ARGB_8888);
+    Canvas c = new Canvas(b);
+
+    picture.draw(c);
+    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    b.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+    try {
+      byteArrayOutputStream.close();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    result.success(byteArrayOutputStream.toByteArray());
   }
 
   private void clearCache(Result result) {
