@@ -67,6 +67,7 @@
     _webView.navigationDelegate = _navigationDelegate;
 
     [_webView addObserver:self forKeyPath:@"estimatedProgress" options:NSKeyValueObservingOptionNew context:NULL];
+    [_webView addObserver:self forKeyPath:@"URL" options:NSKeyValueObservingOptionNew context:NULL];
 
     __weak __typeof__(self) weakSelf = self;
     [_channel setMethodCallHandler:^(FlutterMethodCall* call, FlutterResult result) {
@@ -92,6 +93,8 @@
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
     if ([keyPath isEqualToString:@"estimatedProgress"] && object == _webView) {
         [_channel invokeMethod:@"onProgressChanged" arguments:@{@"progress": @(_webView.estimatedProgress)}];
+    } else if ([keyPath isEqualToString:@"URL"] && object == _webView) {
+        [_channel invokeMethod:@"onURLChanged" arguments:@{@"url" : _webView.URL.absoluteString}];
     } else {
         [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
     }

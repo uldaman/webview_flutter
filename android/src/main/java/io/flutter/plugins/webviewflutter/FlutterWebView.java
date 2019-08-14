@@ -9,6 +9,8 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
 import android.view.View;
+import android.webkit.WebView;
+import android.webkit.WebChromeClient;
 import android.webkit.WebStorage;
 import android.webkit.WebViewClient;
 import io.flutter.plugin.common.BinaryMessenger;
@@ -18,6 +20,7 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.platform.PlatformView;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -30,6 +33,7 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
   private final MethodChannel methodChannel;
   private final FlutterWebViewClient flutterWebViewClient;
   private final Handler platformThreadHandler;
+  private String currentURL = "";
 
   @SuppressWarnings("unchecked")
   FlutterWebView(
@@ -235,6 +239,19 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
               flutterWebViewClient.createWebViewClient(hasNavigationDelegate);
 
           webView.setWebViewClient(webViewClient);
+          webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public void onProgressChanged(WebView view, int newProgress) {
+              Map<String, Object> args = new HashMap<>();
+              if (!view.getUrl().equals(currentURL)) {
+                currentURL = view.getUrl();
+                args.put("url", currentURL);
+                methodChannel.invokeMethod("onURLChanged", args);
+              }
+              args.put("progress", newProgress / 100.0);
+              methodChannel.invokeMethod("onProgressChanged", args);
+            }
+          });
           break;
         case "debuggingEnabled":
           final boolean debuggingEnabled = (boolean) settings.get(key);

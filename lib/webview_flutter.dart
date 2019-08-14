@@ -68,6 +68,9 @@ typedef void PageStartedCallback(String url);
 /// Signature for when the current [progress] of loading a page is changed.
 typedef void ProgressChangedCallback(double progress);
 
+/// Invoked by [WebViewPlatformController] when the current url is changed.
+typedef void URLChangedCallback(String url);
+
 final RegExp _validHandlerNames = RegExp('^[a-zA-Z_][a-zA-Z0-9]*\$');
 
 /// A named handler for receiving messaged from JavaScript code running inside a web view.
@@ -119,6 +122,7 @@ class WebView extends StatefulWidget {
     this.onPageFinished,
     this.onPageStarted,
     this.onProgressChanged,
+    this.onURLChanged,
     this.debuggingEnabled = false,
   })  : assert(javascriptMode != null),
         super(key: key);
@@ -250,6 +254,9 @@ class WebView extends StatefulWidget {
   /// Invoked by [WebViewPlatformController] when the current [progress]
   /// (range 0-1.0) of loading a page is changed.
   final ProgressChangedCallback onProgressChanged;
+
+  /// Invoked by [WebViewPlatformController] when the current url is changed.
+  final URLChangedCallback onURLChanged;
 
   /// Controls whether WebView debugging is enabled.
   ///
@@ -417,6 +424,13 @@ class _PlatformCallbacksHandler implements WebViewPlatformCallbacksHandler {
   void onProgressChanged(double progress) {
     if (_widget.onProgressChanged != null) {
       _widget.onProgressChanged(progress);
+    }
+  }
+
+  @override
+  void onURLChanged(String url) {
+    if (_widget.onURLChanged != null) {
+      _widget.onURLChanged(url);
     }
   }
 
