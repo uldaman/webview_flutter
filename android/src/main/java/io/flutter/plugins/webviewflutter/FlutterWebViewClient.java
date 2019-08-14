@@ -14,13 +14,14 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.webkit.ServiceWorkerController;
 import android.webkit.ServiceWorkerClient;
+import android.webkit.CookieManager;
 import androidx.annotation.NonNull;
 import androidx.webkit.WebViewClientCompat;
 import io.flutter.plugin.common.MethodChannel;
 import java.util.HashMap;
 import java.util.Map;
 import java.net.URL;
-import java.net.HttpURLConnection;
+import javax.net.ssl.HttpsURLConnection;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
@@ -45,7 +46,7 @@ class FlutterWebViewClient {
           try {
             Map<String, String> headers = request.getRequestHeaders();
             String method = request.getMethod();
-            HttpURLConnection connection = makeURLConnection(request.getUrl().toString(), method, headers);
+            HttpsURLConnection connection = makeURLConnection(request.getUrl().toString(), method, headers);
             if (connection.getContentType().contains("text/html")) {
               return interceptRequest(connection);
             }
@@ -56,22 +57,24 @@ class FlutterWebViewClient {
     });
   }
 
-  private HttpURLConnection makeURLConnection(String url, String method, Map<String, String> headers) throws Exception {
-    HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+  private HttpsURLConnection makeURLConnection(String url, String method, Map<String, String> headers) throws Exception {
+    URL myURL = new URL(url);
+    HttpsURLConnection connection = (HttpsURLConnection) myURL.openConnection();
     connection.setRequestMethod(method);
+    connection.addRequestProperty("Cookie", CookieManager.getInstance().getCookie(myURL.getHost()));
     for (Map.Entry<String, String> entry : headers.entrySet()) {
       connection.addRequestProperty(entry.getKey(), entry.getValue());
     }
 
     int status = connection.getResponseCode();
-    if (status == HttpURLConnection.HTTP_MOVED_TEMP
-          || status == HttpURLConnection.HTTP_MOVED_PERM
-          || status == HttpURLConnection.HTTP_SEE_OTHER)
+    if (status == HttpsURLConnection.HTTP_MOVED_TEMP
+          || status == HttpsURLConnection.HTTP_MOVED_PERM
+          || status == HttpsURLConnection.HTTP_SEE_OTHER)
       return makeURLConnection(connection.getHeaderField("Location"), method, headers);
     return connection;
   }
 
-  private WebResourceResponse interceptRequest(HttpURLConnection connection) throws Exception {
+  private WebResourceResponse interceptRequest(HttpsURLConnection connection) throws Exception {
     StringBuilder sb = new StringBuilder();
     sb.append("<script>");
     sb.append("eval(flutter_webview.getPreloadjs());");
@@ -98,7 +101,7 @@ class FlutterWebViewClient {
       try {
         Map<String, String> headers = request.getRequestHeaders();
         String method = request.getMethod();
-        HttpURLConnection connection = makeURLConnection(request.getUrl().toString(), method, headers);
+        HttpsURLConnection connection = makeURLConnection(request.getUrl().toString(), method, headers);
         return interceptRequest(connection);
       } catch(Exception e) {
       }
