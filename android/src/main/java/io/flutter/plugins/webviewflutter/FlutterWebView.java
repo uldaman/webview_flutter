@@ -46,10 +46,9 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
     webView = new InputAwareWebView(context, containerView);
 
     platformThreadHandler = new Handler(context.getMainLooper());
-    // Allow local storage.
-    webView.getSettings().setDomStorageEnabled(true);
 
-    // Allow image mixed content.
+    webView.getSettings().setDatabaseEnabled(true);
+    webView.getSettings().setDomStorageEnabled(true);
     webView.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
 
     methodChannel = new MethodChannel(messenger, "plugins.flutter.io/webview_" + id);
