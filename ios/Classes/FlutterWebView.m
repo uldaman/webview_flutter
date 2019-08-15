@@ -115,6 +115,8 @@
     [self onGoForward:call result:result];
   } else if ([[call method] isEqualToString:@"reload"]) {
     [self onReload:call result:result];
+  }  else if ([[call method] isEqualToString:@"stopLoading"]) {
+    [self onStopLoading:call result:result];
   } else if ([[call method] isEqualToString:@"currentUrl"]) {
     [self onCurrentUrl:call result:result];
   } else if ([[call method] isEqualToString:@"currentTitle"]) {
@@ -172,6 +174,11 @@
 
 - (void)onReload:(FlutterMethodCall*)call result:(FlutterResult)result {
   [_webView reload];
+  result(nil);
+}
+
+- (void)onStopLoading:(FlutterMethodCall*)call result:(FlutterResult)result {
+  [_webView stopLoading];
   result(nil);
 }
 

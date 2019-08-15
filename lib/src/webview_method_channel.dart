@@ -95,6 +95,9 @@ class MethodChannelWebViewPlatform implements WebViewPlatformController {
   Future<void> reload() => _channel.invokeMethod<void>("reload");
 
   @override
+  Future<void> stopLoading() => _channel.invokeMethod<void>("stopLoading");
+
+  @override
   Future<void> clearCache() => _channel.invokeMethod<void>("clearCache");
 
   @override
