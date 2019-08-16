@@ -94,7 +94,9 @@
     if ([keyPath isEqualToString:@"estimatedProgress"] && object == _webView) {
         [_channel invokeMethod:@"onProgressChanged" arguments:@{@"progress": @(_webView.estimatedProgress)}];
     } else if ([keyPath isEqualToString:@"URL"] && object == _webView) {
-        [_channel invokeMethod:@"onURLChanged" arguments:@{@"url" : _webView.URL.absoluteString}];
+        if (_webView.URL) {
+            [_channel invokeMethod:@"onURLChanged" arguments:@{@"url" : _webView.URL.absoluteString}];
+        }
     } else {
         [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
     }
@@ -183,7 +185,12 @@
 }
 
 - (void)onCurrentUrl:(FlutterMethodCall*)call result:(FlutterResult)result {
-  result([[_webView URL] absoluteString]);
+  if (_webView.URL) {
+    result([[_webView URL] absoluteString]);
+  } else {
+    result("");
+  }
+
 }
 
 - (void)onCurrentTitle:(FlutterMethodCall*)call result:(FlutterResult)result {
@@ -249,8 +256,10 @@
         [_webView.configuration.userContentController removeScriptMessageHandlerForName:@"flutter_webview"];
         [_webView.configuration.userContentController removeAllUserScripts];
         [_webView removeObserver:self forKeyPath:@"estimatedProgress"];
+        [_webView removeObserver:self forKeyPath:@"URL"];
         [_webView removeFromSuperview];
         _webView = nil;
+        _channel = nil;
     }
 }
 
