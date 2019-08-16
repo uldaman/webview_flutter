@@ -188,7 +188,7 @@
   if (_webView.URL) {
     result([[_webView URL] absoluteString]);
   } else {
-    result("");
+    result(@"");
   }
 
 }
