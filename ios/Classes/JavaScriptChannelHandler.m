@@ -27,15 +27,17 @@
     @"handler" : message.body[@"handler"],
     @"arguments" : message.body[@"args"]
   };
+  __weak FLTJavaScriptChannel* weakSelf = self;
   [_methodChannel invokeMethod:@"javascriptChannelMessage" arguments:arguments result:^(FlutterResult _Nullable result) {
       if (result == FlutterMethodNotImplemented) {
         return;
       }
+      FLTJavaScriptChannel* strongSelf = weakSelf;
       if ([result isKindOfClass:[FlutterError class]]) {
-        [self->_webView evaluateJavaScript:[NSString stringWithFormat:@"window.flutter_webview_fail(%@, `%@`);", message.body[@"_postID"], [result message]] completionHandler:nil];
+        [strongSelf->_webView evaluateJavaScript:[NSString stringWithFormat:@"window.flutter_webview_fail(%@, `%@`);", message.body[@"_postID"], [result message]] completionHandler:nil];
         return;
       }
-      [self->_webView evaluateJavaScript:[NSString stringWithFormat:@"window.flutter_webview_succeed(%@, %@);", message.body[@"_postID"], result] completionHandler:nil];
+      [strongSelf->_webView evaluateJavaScript:[NSString stringWithFormat:@"window.flutter_webview_succeed(%@, %@);", message.body[@"_postID"], result] completionHandler:nil];
   }];
 }
 
