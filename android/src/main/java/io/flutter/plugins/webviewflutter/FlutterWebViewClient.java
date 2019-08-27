@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.annotation.TargetApi;
 import android.os.Build;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
@@ -206,6 +207,13 @@ class FlutterWebViewClient {
       public WebResourceResponse shouldInterceptRequest (WebView view, WebResourceRequest request) {
         return FlutterWebViewClient.this.shouldInterceptRequest(view, request);
       }
+
+      @Override
+      public void onUnhandledKeyEvent(WebView view, KeyEvent event) {
+        // Deliberately empty. Occasionally the webview will mark events as having failed to be
+        // handled even though they were handled. We don't want to propagate those as they're not
+        // truly lost.
+      }
     };
   }
 
@@ -234,6 +242,13 @@ class FlutterWebViewClient {
       @Override
       public WebResourceResponse shouldInterceptRequest (WebView view, WebResourceRequest request) {
         return FlutterWebViewClient.this.shouldInterceptRequest(view, request);
+      }
+
+      @Override
+      public void onUnhandledKeyEvent(WebView view, KeyEvent event) {
+        // Deliberately empty. Occasionally the webview will mark events as having failed to be
+        // handled even though they were handled. We don't want to propagate those as they're not
+        // truly lost.
       }
     };
   }

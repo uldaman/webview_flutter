@@ -52,7 +52,9 @@
     _channel = [FlutterMethodChannel methodChannelWithName:channelName binaryMessenger:messenger];
 
     WKWebViewConfiguration* configuration = [[WKWebViewConfiguration alloc] init];
-    configuration.userContentController = [[WKUserContentController alloc] init];;
+    configuration.userContentController = [[WKUserContentController alloc] init];
+    [self updateAutoMediaPlaybackPolicy:args[@"autoMediaPlaybackPolicy"]
+                    inConfiguration:configuration];
     _webView = [[WKWebView alloc] initWithFrame:frame configuration:configuration];
 
     [self registerJavaScriptChannels:configuration.userContentController];
@@ -275,6 +277,9 @@
       _navigationDelegate.hasDartNavigationDelegate = [hasDartNavigationDelegate boolValue];
     } else if ([key isEqualToString:@"debuggingEnabled"]) {
       // no-op debugging is always enabled on iOS.
+    } else if ([key isEqualToString:@"userAgent"]) {
+      NSString* userAgent = settings[key];
+      [self updateUserAgent:[userAgent isEqual:[NSNull null]] ? nil : userAgent];
     } else {
       [unknownKeys addObject:key];
     }
@@ -297,6 +302,28 @@
       break;
     default:
       NSLog(@"webview_flutter: unknown JavaScript mode: %@", mode);
+  }
+}
+
+- (void)updateAutoMediaPlaybackPolicy:(NSNumber*)policy
+                      inConfiguration:(WKWebViewConfiguration*)configuration {
+  switch ([policy integerValue]) {
+    case 0:  // require_user_action_for_all_media_types
+      if (@available(iOS 10.0, *)) {
+        configuration.mediaTypesRequiringUserActionForPlayback = WKAudiovisualMediaTypeAll;
+      } else {
+        configuration.mediaPlaybackRequiresUserAction = true;
+      }
+      break;
+    case 1:  // always_allow
+      if (@available(iOS 10.0, *)) {
+        configuration.mediaTypesRequiringUserActionForPlayback = WKAudiovisualMediaTypeNone;
+      } else {
+        configuration.mediaPlaybackRequiresUserAction = false;
+      }
+      break;
+    default:
+      NSLog(@"webview_flutter: unknown auto media playback policy: %@", policy);
   }
 }
 
@@ -379,6 +406,14 @@
                              injectionTime:WKUserScriptInjectionTimeAtDocumentStart
                           forMainFrameOnly:YES];
   [userContentController addUserScript:wrapperScript];
+}
+
+- (void)updateUserAgent:(NSString*)userAgent {
+  if (@available(iOS 9.0, *)) {
+    [_webView setCustomUserAgent:userAgent];
+  } else {
+    NSLog(@"Updating UserAgent is not supported for Flutter WebViews prior to iOS 9.");
+  }
 }
 
 @end

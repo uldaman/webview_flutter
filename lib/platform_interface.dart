@@ -42,6 +42,12 @@ abstract class WebViewPlatformCallbacksHandler {
 ///
 /// An instance implementing this interface is passed to the `onWebViewPlatformCreated` callback that is
 /// passed to [WebViewPlatformBuilder#onWebViewPlatformCreated].
+///
+/// Platform implementations that live in a separate package should extend this class rather than
+/// implement it as webview_flutter does not consider newly added methods to be breaking changes.
+/// Extending this class (using `extends`) ensures that the subclass will get the default
+/// implementation, while platform implementations that `implements` this interface will be broken
+/// by newly added [WebViewPlatformController] methods.
 abstract class WebViewPlatformController {
   /// Creates a new WebViewPlatform.
   ///
@@ -158,16 +164,66 @@ abstract class WebViewPlatformController {
   }
 }
 
+/// A single setting for configuring a WebViewPlatform which may be absent.
+class WebSetting<T> {
+  /// Constructs an absent setting instance.
+  ///
+  /// The [isPresent] field for the instance will be false.
+  ///
+  /// Accessing [value] for an absent instance will throw.
+  WebSetting.absent()
+      : _value = null,
+        isPresent = false;
+
+  /// Constructs a setting of the given `value`.
+  ///
+  /// The [isPresent] field for the instance will be true.
+  WebSetting.of(T value)
+      : _value = value,
+        isPresent = true;
+
+  final T _value;
+
+  /// The setting's value.
+  ///
+  /// Throws if [WebSetting.isPresent] is false.
+  T get value {
+    if (!isPresent) {
+      throw StateError('Cannot access a value of an absent WebSetting');
+    }
+    assert(isPresent);
+    return _value;
+  }
+
+  /// True when this web setting instance contains a value.
+  ///
+  /// When false the [WebSetting.value] getter throws.
+  final bool isPresent;
+
+  @override
+  bool operator ==(Object other) {
+    if (other.runtimeType != runtimeType) return false;
+    final WebSetting<T> typedOther = other;
+    return typedOther.isPresent == isPresent && typedOther._value == _value;
+  }
+
+  @override
+  int get hashCode => hashValues(_value, isPresent);
+}
+
 /// Settings for configuring a WebViewPlatform.
 ///
 /// Initial settings are passed as part of [CreationParams], settings updates are sent with
 /// [WebViewPlatform#updateSettings].
+///
+/// The `userAgent` parameter must not be null.
 class WebSettings {
   WebSettings({
     this.javascriptMode,
     this.hasNavigationDelegate,
     this.debuggingEnabled,
-  });
+    @required this.userAgent,
+  }) : assert(userAgent != null);
 
   /// The JavaScript execution mode to be used by the webview.
   final JavascriptMode javascriptMode;
@@ -180,15 +236,34 @@ class WebSettings {
   /// See also: [WebView.debuggingEnabled].
   final bool debuggingEnabled;
 
+  /// The value used for the HTTP `User-Agent:` request header.
+  ///
+  /// If [userAgent.value] is null the platform's default user agent should be used.
+  ///
+  /// An absent value ([userAgent.isPresent] is false) represents no change to this setting from the
+  /// last time it was set.
+  ///
+  /// See also [WebView.userAgent].
+  final WebSetting<String> userAgent;
+
   @override
   String toString() {
-    return 'WebSettings(javascriptMode: $javascriptMode, hasNavigationDelegate: $hasNavigationDelegate, debuggingEnabled: $debuggingEnabled)';
+    return 'WebSettings(javascriptMode: $javascriptMode, hasNavigationDelegate: $hasNavigationDelegate, debuggingEnabled: $debuggingEnabled, userAgent: $userAgent,)';
   }
 }
 
 /// Configuration to use when creating a new [WebViewPlatformController].
+///
+/// The `autoMediaPlaybackPolicy` parameter must not be null.
 class CreationParams {
-  CreationParams({this.injectJavascript, this.initialUrl, this.webSettings});
+  CreationParams({
+    this.injectJavascript,
+    this.initialUrl,
+    this.webSettings,
+    this.userAgent,
+    this.autoMediaPlaybackPolicy =
+        AutoMediaPlaybackPolicy.require_user_action_for_all_media_types,
+  }) : assert(autoMediaPlaybackPolicy != null);
 
   /// The javascript injected at document start.
   final String injectJavascript;
@@ -203,9 +278,17 @@ class CreationParams {
   /// This can later be updated with [WebViewPlatformController.updateSettings].
   final WebSettings webSettings;
 
+  /// The value used for the HTTP User-Agent: request header.
+  ///
+  /// When null the platform's webview default is used for the User-Agent header.
+  final String userAgent;
+
+  /// Which restrictions apply on automatic media playback.
+  final AutoMediaPlaybackPolicy autoMediaPlaybackPolicy;
+
   @override
   String toString() {
-    return '$runtimeType(injectJavascript: $injectJavascript, initialUrl: $initialUrl, settings: $webSettings)';
+    return '$runtimeType(initialUrl: $initialUrl, settings: $webSettings, UserAgent: $userAgent)';
   }
 }
 
