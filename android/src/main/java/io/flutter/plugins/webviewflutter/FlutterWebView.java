@@ -23,6 +23,7 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.platform.PlatformView;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -159,6 +160,9 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
       case "clearCache":
         clearCache(result);
         break;
+      case "loadHTMLString":
+        loadDataWithBaseURL(methodCall, result);
+        break;
       default:
         result.notImplemented();
     }
@@ -255,6 +259,12 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
   private void clearCache(Result result) {
     webView.clearCache(true);
     WebStorage.getInstance().deleteAllData();
+    result.success(null);
+  }
+
+  private void loadDataWithBaseURL(MethodCall methodCall, Result result) {
+    ArrayList<String> arguments = (ArrayList<String>) methodCall.arguments;
+    webView.loadDataWithBaseURL(arguments.get(0), arguments.get(1), null, null,null);
     result.success(null);
   }
 
