@@ -131,6 +131,8 @@
     [self onTakeScreenshot:call result:result];
   } else if ([[call method] isEqualToString:@"clearCache"]) {
     [self clearCache:result];
+  } else if ([[call method] isEqualToString:@"loadHTMLString"]) {
+      [self loadHTMLString:call result:result];
   } else {
     result(FlutterMethodNotImplemented);
   }
@@ -192,7 +194,6 @@
   } else {
     result(@"");
   }
-
 }
 
 - (void)onCurrentTitle:(FlutterMethodCall*)call result:(FlutterResult)result {
@@ -247,6 +248,16 @@
     // support for iOS8 tracked in https://github.com/flutter/flutter/issues/27624.
     NSLog(@"Clearing cache is not supported for Flutter WebViews prior to iOS 9.");
   }
+}
+
+- (void)loadHTMLString:(FlutterMethodCall*)call result:(FlutterResult)result {
+  NSArray* arguments = [call arguments];
+  if ([arguments[1] isKindOfClass:[NSString class]]) {
+    [_webView loadHTMLString:arguments[0] baseURL:[NSURL URLWithString:arguments[1]]];
+  } else {
+    [_webView loadHTMLString:arguments[0] baseURL:nil];
+  }
+  result(nil);
 }
 
 -(void)dealloc {

@@ -115,6 +115,12 @@ class MethodChannelWebViewPlatform implements WebViewPlatformController {
         'evaluateJavascript', javascriptString);
   }
 
+  @override
+  Future<String> loadHTMLString(String html, String url) {
+    final List args = [html, url];
+    return _channel.invokeMethod<String>('loadHTMLString', args);
+  }
+
   /// Method channel implementation for [WebViewPlatform.clearCookies].
   static Future<bool> clearCookies() {
     return _cookieManagerChannel

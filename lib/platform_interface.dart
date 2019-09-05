@@ -162,6 +162,12 @@ abstract class WebViewPlatformController {
     throw UnimplementedError(
         "WebView evaluateJavascript is not implemented on the current platform");
   }
+
+  /// Sets the main page contents and base URL.
+  Future<void> loadHTMLString(String html, String url) {
+    throw UnimplementedError(
+        "WebView loadHTMLString is not implemented on the current platform");
+  }
 }
 
 /// A single setting for configuring a WebViewPlatform which may be absent.

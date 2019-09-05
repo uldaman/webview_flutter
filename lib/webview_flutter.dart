@@ -664,6 +664,11 @@ class WebViewController {
     // ignore: strong_mode_implicit_dynamic_method
     return _webViewPlatformController.evaluateJavascript(javascriptString);
   }
+
+  /// Sets the main page contents and base URL.
+  Future<void> loadHTMLString(String html, String url) {
+    return _webViewPlatformController.loadHTMLString(html, url);
+  }
 }
 
 /// Manages cookies pertaining to all [WebView]s.
