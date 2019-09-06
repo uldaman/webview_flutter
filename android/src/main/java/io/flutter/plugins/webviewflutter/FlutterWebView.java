@@ -245,6 +245,7 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
   private void takeScreenshot(Result result) {
     Bitmap b = Bitmap.createBitmap(webView.getWidth(), webView.getHeight(), Bitmap.Config.ARGB_8888);
     Canvas c = new Canvas(b);
+    c.translate(-webView.getScrollX(), -webView.getScrollY());
     webView.draw(c);
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
     b.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
