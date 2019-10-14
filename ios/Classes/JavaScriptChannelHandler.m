@@ -34,7 +34,7 @@
       }
       FLTJavaScriptChannel* strongSelf = weakSelf;
       if ([result isKindOfClass:[FlutterError class]]) {
-        [strongSelf->_webView evaluateJavaScript:[NSString stringWithFormat:@"window.flutter_webview_fail(%@, `%@`);", message.body[@"_postID"], [result message]] completionHandler:nil];
+        [strongSelf->_webView evaluateJavaScript:[NSString stringWithFormat:@"window.flutter_webview_fail(%@, new Error(`%@`));", message.body[@"_postID"], [result message]] completionHandler:nil];
         return;
       }
       [strongSelf->_webView evaluateJavaScript:[NSString stringWithFormat:@"window.flutter_webview_succeed(%@, %@);", message.body[@"_postID"], result] completionHandler:nil];

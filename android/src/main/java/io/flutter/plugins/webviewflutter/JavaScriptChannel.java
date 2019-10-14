@@ -76,7 +76,7 @@ class JavaScriptChannel {
 
                 @Override
                 public void error(String s, String s1, Object o) {
-                 webView.evaluateJavascript("window.flutter_webview_fail(" + _postID + ",`" + s + " " + s1 + "`);", null);
+                 webView.evaluateJavascript("window.flutter_webview_fail(" + _postID + ",new Error(`" + s + " " + s1 + "`));", null);
                 }
 
                 @Override
