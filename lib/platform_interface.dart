@@ -30,6 +30,9 @@ abstract class WebViewPlatformCallbacksHandler {
   /// Invoked by [WebViewPlatformController] when a page has started loading.
   void onPageStarted(String url);
 
+  /// Invoked by [WebViewPlatformController] when delegate has error.
+  void onDelegateError(String url);
+
   /// Invoked by [WebViewPlatformController] when the current [progress]
   /// (range 0-1.0) of loading a page is changed.
   void onProgressChanged(double progress);

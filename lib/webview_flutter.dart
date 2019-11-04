@@ -65,6 +65,9 @@ typedef void PageFinishedCallback(String url);
 /// Signature for when a [WebView] has started loading a page.
 typedef void PageStartedCallback(String url);
 
+/// Signature for when a [WebView] delegate has error.
+typedef void DelegateErrorCallback(String error);
+
 /// Signature for when the current [progress] of loading a page is changed.
 typedef void ProgressChangedCallback(double progress);
 
@@ -140,6 +143,7 @@ class WebView extends StatefulWidget {
     this.gestureRecognizers,
     this.onPageFinished,
     this.onPageStarted,
+    this.onDelegateError,
     this.onProgressChanged,
     this.onURLChanged,
     this.debuggingEnabled = false,
@@ -273,6 +277,9 @@ class WebView extends StatefulWidget {
 
   /// Invoked when a page has started loading.
   final PageStartedCallback onPageStarted;
+
+  /// Invoked when a page has started loading.
+  final DelegateErrorCallback onDelegateError;
 
   /// Invoked by [WebViewPlatformController] when the current [progress]
   /// (range 0-1.0) of loading a page is changed.
@@ -474,6 +481,13 @@ class _PlatformCallbacksHandler implements WebViewPlatformCallbacksHandler {
   void onPageStarted(String url) {
     if (_widget.onPageStarted != null) {
       _widget.onPageStarted(url);
+    }
+  }
+
+  @override
+  void onDelegateError(String url) {
+    if (_widget.onDelegateError != null) {
+      _widget.onDelegateError(url);
     }
   }
 

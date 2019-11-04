@@ -78,4 +78,9 @@
   }
 }
 
+- (void)webView:(WKWebView *)webView didFailProvisionalNavigation:(WKNavigation *)navigation
+withError:(NSError *)error {
+  [_methodChannel invokeMethod:@"onDelegateError" arguments:@{@"error" : error.localizedDescription}];
+}
+
 @end
