@@ -567,6 +567,11 @@ class WebViewController {
     return _webViewPlatformController.currentUrl();
   }
 
+  /// Returns the title of the currently loaded page.
+  Future<String> getTitle() {
+    return _webViewPlatformController.getTitle();
+  }
+
   /// Takes a screenshot (in PNG format) of the WebView's visible viewport and returns a `Uint8List`. Returns `null` if it wasn't be able to take it.
   Future<Uint8List> takeScreenshot() {
     return _webViewPlatformController.takeScreenshot();
@@ -676,9 +681,9 @@ class WebViewController {
     return _webViewPlatformController.evaluateJavascript(javascriptString);
   }
 
-  /// Returns the title of the currently loaded page.
-  Future<String> getTitle() {
-    return _webViewPlatformController.getTitle();
+  /// Sets the main page contents and base URL.
+  Future<void> loadHTMLString(String html, String url) {
+    return _webViewPlatformController.loadHTMLString(html, url);
   }
 }
 
