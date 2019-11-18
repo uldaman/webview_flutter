@@ -57,7 +57,8 @@ enum NavigationDecision {
 /// `navigation` should be handled.
 ///
 /// See also: [WebView.navigationDelegate].
-typedef NavigationDecision NavigationDelegate(NavigationRequest navigation);
+typedef FutureOr<NavigationDecision> NavigationDelegate(
+    NavigationRequest navigation);
 
 /// Signature for when a [WebView] has finished loading a page.
 typedef void PageFinishedCallback(String url);
@@ -93,7 +94,7 @@ enum AutoMediaPlaybackPolicy {
   always_allow,
 }
 
-final RegExp _validHandlerNames = RegExp('^[a-zA-Z_][a-zA-Z0-9]*\$');
+final RegExp _validHandlerNames = RegExp('^[a-zA-Z_][a-zA-Z0-9_]*\$');
 
 /// A named handler for receiving messaged from JavaScript code running inside a web view.
 class JavascriptHandler {
@@ -462,11 +463,12 @@ class _PlatformCallbacksHandler implements WebViewPlatformCallbacksHandler {
   }
 
   @override
-  bool onNavigationRequest({String url, bool isForMainFrame}) {
+  FutureOr<bool> onNavigationRequest({String url, bool isForMainFrame}) async {
     final NavigationRequest request =
         NavigationRequest._(url: url, isForMainFrame: isForMainFrame);
     final bool allowNavigation = _widget.navigationDelegate == null ||
-        _widget.navigationDelegate(request) == NavigationDecision.navigate;
+        await _widget.navigationDelegate(request) ==
+            NavigationDecision.navigate;
     return allowNavigation;
   }
 
@@ -563,11 +565,6 @@ class WebViewController {
   /// different URL).
   Future<String> currentUrl() {
     return _webViewPlatformController.currentUrl();
-  }
-
-  /// Accessor to the current title that the WebView is displaying.
-  Future<String> currentTitle() {
-    return _webViewPlatformController.currentTitle();
   }
 
   /// Takes a screenshot (in PNG format) of the WebView's visible viewport and returns a `Uint8List`. Returns `null` if it wasn't be able to take it.
@@ -679,9 +676,9 @@ class WebViewController {
     return _webViewPlatformController.evaluateJavascript(javascriptString);
   }
 
-  /// Sets the main page contents and base URL.
-  Future<void> loadHTMLString(String html, String url) {
-    return _webViewPlatformController.loadHTMLString(html, url);
+  /// Returns the title of the currently loaded page.
+  Future<String> getTitle() {
+    return _webViewPlatformController.getTitle();
   }
 }
 

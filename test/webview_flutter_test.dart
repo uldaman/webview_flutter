@@ -454,6 +454,7 @@ void main() {
     final JavascriptMessageHandler noOp = (List<dynamic> msg) {};
     JavascriptHandler(name: 'Tts1', onMessageReceived: noOp);
     JavascriptHandler(name: '_Alarm', onMessageReceived: noOp);
+    JavascriptHandler(name: 'foo_bar_', onMessageReceived: noOp);
 
     VoidCallback createChannel(String name) {
       return () {

@@ -33,7 +33,7 @@ class MethodChannelWebViewPlatform implements WebViewPlatformController {
         return jsonEncode(await _platformCallbacksHandler
             .onJavaScriptChannelMessage(handler, arguments));
       case 'navigationRequest':
-        return _platformCallbacksHandler.onNavigationRequest(
+        return await _platformCallbacksHandler.onNavigationRequest(
           url: call.arguments['url'],
           isForMainFrame: call.arguments['isForMainFrame'],
         );
@@ -73,10 +73,6 @@ class MethodChannelWebViewPlatform implements WebViewPlatformController {
 
   @override
   Future<String> currentUrl() => _channel.invokeMethod<String>('currentUrl');
-
-  @override
-  Future<String> currentTitle() =>
-      _channel.invokeMethod<String>('currentTitle');
 
   @override
   Future<Uint8List> takeScreenshot() =>
@@ -123,6 +119,9 @@ class MethodChannelWebViewPlatform implements WebViewPlatformController {
     final List<String> args = [html, url];
     return _channel.invokeMethod<String>('loadHTMLString', args);
   }
+
+  @override
+  Future<String> getTitle() => _channel.invokeMethod<String>("getTitle");
 
   /// Method channel implementation for [WebViewPlatform.clearCookies].
   static Future<bool> clearCookies() {

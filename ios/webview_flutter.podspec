@@ -17,4 +17,5 @@ A WebView Plugin for Flutter.
   s.dependency 'Flutter'
 
   s.ios.deployment_target = '11.0'
+  s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'VALID_ARCHS[sdk=iphonesimulator*]' => 'x86_64' }
 end

@@ -45,7 +45,7 @@
                viewIdentifier:(int64_t)viewId
                     arguments:(id _Nullable)args
               binaryMessenger:(NSObject<FlutterBinaryMessenger>*)messenger {
-  if ([super init]) {
+  if (self = [super init]) {
     _viewId = viewId;
 
     NSString* channelName = [NSString stringWithFormat:@"plugins.flutter.io/webview_%lld", viewId];
@@ -123,16 +123,16 @@
     [self onStopLoading:call result:result];
   } else if ([[call method] isEqualToString:@"currentUrl"]) {
     [self onCurrentUrl:call result:result];
-  } else if ([[call method] isEqualToString:@"currentTitle"]) {
-    [self onCurrentTitle:call result:result];
+  } else if ([[call method] isEqualToString:@"loadHTMLString"]) {
+    [self loadHTMLString:call result:result];
   } else if ([[call method] isEqualToString:@"evaluateJavascript"]) {
     [self onEvaluateJavaScript:call result:result];
   } else if ([[call method] isEqualToString:@"takeScreenshot"]) {
     [self onTakeScreenshot:call result:result];
   } else if ([[call method] isEqualToString:@"clearCache"]) {
     [self clearCache:result];
-  } else if ([[call method] isEqualToString:@"loadHTMLString"]) {
-      [self loadHTMLString:call result:result];
+  } else if ([[call method] isEqualToString:@"getTitle"]) {
+    [self onGetTitle:result];
   } else {
     result(FlutterMethodNotImplemented);
   }
@@ -194,10 +194,6 @@
   } else {
     result(@"");
   }
-}
-
-- (void)onCurrentTitle:(FlutterMethodCall*)call result:(FlutterResult)result {
-  result([_webView title]);
 }
 
 - (void)onTakeScreenshot:(FlutterMethodCall*)call result:(FlutterResult)result {
@@ -274,6 +270,11 @@
         _webView = nil;
         _channel = nil;
     }
+}
+
+- (void)onGetTitle:(FlutterResult)result {
+  NSString* title = _webView.title;
+  result(title);
 }
 
 // Returns nil when successful, or an error message when one or more keys are unknown.

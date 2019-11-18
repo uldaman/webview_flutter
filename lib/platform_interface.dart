@@ -22,7 +22,7 @@ abstract class WebViewPlatformCallbacksHandler {
   /// Invoked by [WebViewPlatformController] when a navigation request is pending.
   ///
   /// If true is returned the navigation is allowed, otherwise it is blocked.
-  bool onNavigationRequest({String url, bool isForMainFrame});
+  FutureOr<bool> onNavigationRequest({String url, bool isForMainFrame});
 
   /// Invoked by [WebViewPlatformController] when a page has finished loading.
   void onPageFinished(String url);
@@ -90,12 +90,6 @@ abstract class WebViewPlatformController {
   Future<String> currentUrl() {
     throw UnimplementedError(
         "WebView currentUrl is not implemented on the current platform");
-  }
-
-  /// Accessor to the current title that the WebView is displaying.
-  Future<String> currentTitle() {
-    throw UnimplementedError(
-        "WebView currentTitle is not implemented on the current platform");
   }
 
   /// Takes a screenshot (in PNG format) of the WebView's visible viewport and returns a `Uint8List`. Returns `null` if it wasn't be able to take it.
@@ -170,6 +164,12 @@ abstract class WebViewPlatformController {
   Future<void> loadHTMLString(String html, String url) {
     throw UnimplementedError(
         "WebView loadHTMLString is not implemented on the current platform");
+  }
+
+  /// Returns the title of the currently loaded page.
+  Future<String> getTitle() {
+    throw UnimplementedError(
+        "WebView getTitle is not implemented on the current platform");
   }
 }
 
