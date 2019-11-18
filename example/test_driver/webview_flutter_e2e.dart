@@ -9,19 +9,17 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_driver/driver_extension.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:e2e/e2e.dart';
 
 void main() {
-  final Completer<String> allTestsCompleter = Completer<String>();
-  enableFlutterDriverExtension(handler: (_) => allTestsCompleter.future);
-  tearDownAll(() => allTestsCompleter.complete(null));
+  E2EWidgetsFlutterBinding.ensureInitialized();
 
-  test('initalUrl', () async {
+  testWidgets('initalUrl', (WidgetTester tester) async {
     final Completer<WebViewController> controllerCompleter =
         Completer<WebViewController>();
-    await pumpWidget(
+    await tester.pumpWidget(
       Directionality(
         textDirection: TextDirection.ltr,
         child: WebView(
@@ -38,10 +36,10 @@ void main() {
     expect(currentUrl, 'https://flutter.dev/');
   });
 
-  test('loadUrl', () async {
+  testWidgets('loadUrl', (WidgetTester tester) async {
     final Completer<WebViewController> controllerCompleter =
         Completer<WebViewController>();
-    await pumpWidget(
+    await tester.pumpWidget(
       Directionality(
         textDirection: TextDirection.ltr,
         child: WebView(
@@ -61,11 +59,11 @@ void main() {
 
   // enable this once https://github.com/flutter/flutter/issues/31510
   // is resolved.
-  test('loadUrl with headers', () async {
+  testWidgets('loadUrl with headers', (WidgetTester tester) async {
     final Completer<WebViewController> controllerCompleter =
         Completer<WebViewController>();
     final StreamController<String> pageLoads = StreamController<String>();
-    await pumpWidget(
+    await tester.pumpWidget(
       Directionality(
         textDirection: TextDirection.ltr,
         child: WebView(
@@ -96,12 +94,12 @@ void main() {
     expect(content.contains('flutter_test_header'), isTrue);
   });
 
-  test('JavaScriptChannel', () async {
+  testWidgets('JavaScriptChannel', (WidgetTester tester) async {
     final Completer<WebViewController> controllerCompleter =
         Completer<WebViewController>();
     final Completer<void> pageLoaded = Completer<void>();
     final List<String> messagesReceived = <String>[];
-    await pumpWidget(
+    await tester.pumpWidget(
       Directionality(
         textDirection: TextDirection.ltr,
         child: WebView(
@@ -137,7 +135,7 @@ void main() {
     expect(messagesReceived, equals(<String>['hello']));
   });
 
-  test('resize webview', () async {
+  testWidgets('resize webview', (WidgetTester tester) async {
     final String resizeTest = '''
         <!DOCTYPE html><html>
         <head><title>Resize test</title>
@@ -184,7 +182,7 @@ void main() {
       javascriptMode: JavascriptMode.unrestricted,
     );
 
-    await pumpWidget(
+    await tester.pumpWidget(
       Directionality(
         textDirection: TextDirection.ltr,
         child: Column(
@@ -204,7 +202,7 @@ void main() {
 
     expect(resizeCompleter.isCompleted, false);
 
-    await pumpWidget(
+    await tester.pumpWidget(
       Directionality(
         textDirection: TextDirection.ltr,
         child: Column(
@@ -222,11 +220,11 @@ void main() {
     await resizeCompleter.future;
   });
 
-  test('set custom userAgent', () async {
+  testWidgets('set custom userAgent', (WidgetTester tester) async {
     final Completer<WebViewController> controllerCompleter1 =
         Completer<WebViewController>();
     final GlobalKey _globalKey = GlobalKey();
-    await pumpWidget(
+    await tester.pumpWidget(
       Directionality(
         textDirection: TextDirection.ltr,
         child: WebView(
@@ -244,7 +242,7 @@ void main() {
     final String customUserAgent1 = await _getUserAgent(controller1);
     expect(customUserAgent1, 'Custom_User_Agent1');
     // rebuild the WebView with a different user agent.
-    await pumpWidget(
+    await tester.pumpWidget(
       Directionality(
         textDirection: TextDirection.ltr,
         child: WebView(
@@ -260,12 +258,13 @@ void main() {
     expect(customUserAgent2, 'Custom_User_Agent2');
   });
 
-  test('use default platform userAgent after webView is rebuilt', () async {
+  testWidgets('use default platform userAgent after webView is rebuilt',
+      (WidgetTester tester) async {
     final Completer<WebViewController> controllerCompleter =
         Completer<WebViewController>();
     final GlobalKey _globalKey = GlobalKey();
     // Build the webView with no user agent to get the default platform user agent.
-    await pumpWidget(
+    await tester.pumpWidget(
       Directionality(
         textDirection: TextDirection.ltr,
         child: WebView(
@@ -281,7 +280,7 @@ void main() {
     final WebViewController controller = await controllerCompleter.future;
     final String defaultPlatformUserAgent = await _getUserAgent(controller);
     // rebuild the WebView with a custom user agent.
-    await pumpWidget(
+    await tester.pumpWidget(
       Directionality(
         textDirection: TextDirection.ltr,
         child: WebView(
@@ -295,7 +294,7 @@ void main() {
     final String customUserAgent = await _getUserAgent(controller);
     expect(customUserAgent, 'Custom_User_Agent');
     // rebuilds the WebView with no user agent.
-    await pumpWidget(
+    await tester.pumpWidget(
       Directionality(
         textDirection: TextDirection.ltr,
         child: WebView(
@@ -341,12 +340,12 @@ void main() {
       audioTestBase64 = base64Encode(const Utf8Encoder().convert(audioTest));
     });
 
-    test('Auto media playback', () async {
+    testWidgets('Auto media playback', (WidgetTester tester) async {
       Completer<WebViewController> controllerCompleter =
           Completer<WebViewController>();
       Completer<void> pageLoaded = Completer<void>();
 
-      await pumpWidget(
+      await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.ltr,
           child: WebView(
@@ -373,7 +372,7 @@ void main() {
       pageLoaded = Completer<void>();
 
       // We change the key to re-create a new webview as we change the initialMediaPlaybackPolicy
-      await pumpWidget(
+      await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.ltr,
           child: WebView(
@@ -399,13 +398,14 @@ void main() {
       expect(isPaused, _webviewBool(true));
     });
 
-    test('Changes to initialMediaPlaybackPolocy are ignored', () async {
+    testWidgets('Changes to initialMediaPlaybackPolocy are ignored',
+        (WidgetTester tester) async {
       final Completer<WebViewController> controllerCompleter =
           Completer<WebViewController>();
       Completer<void> pageLoaded = Completer<void>();
 
       final GlobalKey key = GlobalKey();
-      await pumpWidget(
+      await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.ltr,
           child: WebView(
@@ -430,7 +430,7 @@ void main() {
 
       pageLoaded = Completer<void>();
 
-      await pumpWidget(
+      await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.ltr,
           child: WebView(
@@ -457,11 +457,160 @@ void main() {
       expect(isPaused, _webviewBool(false));
     });
   });
-}
 
-Future<void> pumpWidget(Widget widget) {
-  runApp(widget);
-  return WidgetsBinding.instance.endOfFrame;
+  testWidgets('getTitle', (WidgetTester tester) async {
+    final String getTitleTest = '''
+        <!DOCTYPE html><html>
+        <head><title>Some title</title>
+        </head>
+        <body>
+        </body>
+        </html>
+      ''';
+    final String getTitleTestBase64 =
+        base64Encode(const Utf8Encoder().convert(getTitleTest));
+    final Completer<void> pageLoaded = Completer<void>();
+    final Completer<WebViewController> controllerCompleter =
+        Completer<WebViewController>();
+
+    await tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: WebView(
+          initialUrl: 'data:text/html;charset=utf-8;base64,$getTitleTestBase64',
+          onWebViewCreated: (WebViewController controller) {
+            controllerCompleter.complete(controller);
+          },
+          onPageFinished: (String url) {
+            pageLoaded.complete(null);
+          },
+        ),
+      ),
+    );
+
+    final WebViewController controller = await controllerCompleter.future;
+    await pageLoaded.future;
+
+    final String title = await controller.getTitle();
+    expect(title, 'Some title');
+  });
+
+  group('NavigationDelegate', () {
+    final String blankPage = "<!DOCTYPE html><head></head><body></body></html>";
+    final String blankPageEncoded = 'data:text/html;charset=utf-8;base64,' +
+        base64Encode(const Utf8Encoder().convert(blankPage));
+
+    testWidgets('can allow requests', (WidgetTester tester) async {
+      final Completer<WebViewController> controllerCompleter =
+          Completer<WebViewController>();
+      final StreamController<String> pageLoads =
+          StreamController<String>.broadcast();
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: WebView(
+            key: GlobalKey(),
+            initialUrl: blankPageEncoded,
+            onWebViewCreated: (WebViewController controller) {
+              controllerCompleter.complete(controller);
+            },
+            javascriptMode: JavascriptMode.unrestricted,
+            navigationDelegate: (NavigationRequest request) {
+              return (request.url.contains('youtube.com'))
+                  ? NavigationDecision.prevent
+                  : NavigationDecision.navigate;
+            },
+            onPageFinished: (String url) => pageLoads.add(url),
+          ),
+        ),
+      );
+
+      await pageLoads.stream.first; // Wait for initial page load.
+      final WebViewController controller = await controllerCompleter.future;
+      await controller
+          .evaluateJavascript('location.href = "https://www.google.com/"');
+
+      await pageLoads.stream.first; // Wait for the next page load.
+      final String currentUrl = await controller.currentUrl();
+      expect(currentUrl, 'https://www.google.com/');
+    });
+
+    testWidgets('can block requests', (WidgetTester tester) async {
+      final Completer<WebViewController> controllerCompleter =
+          Completer<WebViewController>();
+      final StreamController<String> pageLoads =
+          StreamController<String>.broadcast();
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: WebView(
+            key: GlobalKey(),
+            initialUrl: blankPageEncoded,
+            onWebViewCreated: (WebViewController controller) {
+              controllerCompleter.complete(controller);
+            },
+            javascriptMode: JavascriptMode.unrestricted,
+            navigationDelegate: (NavigationRequest request) {
+              return (request.url.contains('youtube.com'))
+                  ? NavigationDecision.prevent
+                  : NavigationDecision.navigate;
+            },
+            onPageFinished: (String url) => pageLoads.add(url),
+          ),
+        ),
+      );
+
+      await pageLoads.stream.first; // Wait for initial page load.
+      final WebViewController controller = await controllerCompleter.future;
+      await controller
+          .evaluateJavascript('location.href = "https://www.youtube.com/"');
+
+      // There should never be any second page load, since our new URL is
+      // blocked. Still wait for a potential page change for some time in order
+      // to give the test a chance to fail.
+      await pageLoads.stream.first
+          .timeout(const Duration(milliseconds: 500), onTimeout: () => null);
+      final String currentUrl = await controller.currentUrl();
+      expect(currentUrl, isNot(contains('youtube.com')));
+    });
+
+    testWidgets('supports asynchronous decisions', (WidgetTester tester) async {
+      final Completer<WebViewController> controllerCompleter =
+          Completer<WebViewController>();
+      final StreamController<String> pageLoads =
+          StreamController<String>.broadcast();
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: WebView(
+            key: GlobalKey(),
+            initialUrl: blankPageEncoded,
+            onWebViewCreated: (WebViewController controller) {
+              controllerCompleter.complete(controller);
+            },
+            javascriptMode: JavascriptMode.unrestricted,
+            navigationDelegate: (NavigationRequest request) async {
+              NavigationDecision decision = NavigationDecision.prevent;
+              decision = await Future<NavigationDecision>.delayed(
+                  const Duration(milliseconds: 10),
+                  () => NavigationDecision.navigate);
+              return decision;
+            },
+            onPageFinished: (String url) => pageLoads.add(url),
+          ),
+        ),
+      );
+
+      await pageLoads.stream.first; // Wait for initial page load.
+      final WebViewController controller = await controllerCompleter.future;
+      await controller
+          .evaluateJavascript('location.href = "https://www.google.com"');
+
+      await pageLoads.stream.first; // Wait for second page to load.
+      final String currentUrl = await controller.currentUrl();
+      expect(currentUrl, 'https://www.google.com/');
+    });
+  });
 }
 
 // JavaScript booleans evaluate to different string values on Android and iOS.
