@@ -271,6 +271,7 @@ class WebSettings {
 /// The `autoMediaPlaybackPolicy` parameter must not be null.
 class CreationParams {
   CreationParams({
+    this.prpmpt,
     this.injectJavascript,
     this.initialUrl,
     this.webSettings,
@@ -278,6 +279,8 @@ class CreationParams {
     this.autoMediaPlaybackPolicy =
         AutoMediaPlaybackPolicy.require_user_action_for_all_media_types,
   }) : assert(autoMediaPlaybackPolicy != null);
+
+  final String prpmpt;
 
   /// The javascript injected at document start.
   final String injectJavascript;

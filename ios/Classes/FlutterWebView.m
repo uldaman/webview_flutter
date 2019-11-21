@@ -39,6 +39,7 @@
   int64_t _viewId;
   FlutterMethodChannel* _channel;
   FLTWKNavigationDelegate* _navigationDelegate;
+  NSString* _prompt;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame
@@ -47,6 +48,8 @@
               binaryMessenger:(NSObject<FlutterBinaryMessenger>*)messenger {
   if (self = [super init]) {
     _viewId = viewId;
+    
+    _prompt = args[@"prpmpt"];
 
     NSString* channelName = [NSString stringWithFormat:@"plugins.flutter.io/webview_%lld", viewId];
     _channel = [FlutterMethodChannel methodChannelWithName:channelName binaryMessenger:messenger];
@@ -68,7 +71,7 @@
     }
 
     _navigationDelegate = [[FLTWKNavigationDelegate alloc] initWithChannel:_channel];
-    _webView.UIDelegate = _navigationDelegate;
+    _webView.UIDelegate = self;
     _webView.navigationDelegate = _navigationDelegate;
 
     [_webView addObserver:self forKeyPath:@"estimatedProgress" options:NSKeyValueObservingOptionNew context:NULL];
@@ -447,6 +450,16 @@
     [_webView setCustomUserAgent:userAgent];
   } else {
     NSLog(@"Updating UserAgent is not supported for Flutter WebViews prior to iOS 9.");
+  }
+}
+
+
+- (void)webView:(WKWebView *)webView runJavaScriptTextInputPanelWithPrompt:(NSString *)prompt defaultText:(NSString *)defaultText initiatedByFrame:(WKFrameInfo *)frame completionHandler:(void (^)(NSString * _Nullable))completionHandler {
+  if([prompt isEqualToString:@"flutter_webview"]) {
+    completionHandler(_prompt);
+  } else {
+    // TODO: default prompt
+    completionHandler(nil);
   }
 }
 

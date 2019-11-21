@@ -7,7 +7,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface FLTWKNavigationDelegate : NSObject <WKNavigationDelegate, WKUIDelegate>
+@interface FLTWKNavigationDelegate : NSObject <WKNavigationDelegate>
 
 - (instancetype)initWithChannel:(FlutterMethodChannel *)channel;
 
