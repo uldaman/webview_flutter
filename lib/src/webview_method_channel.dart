@@ -115,6 +115,11 @@ class MethodChannelWebViewPlatform implements WebViewPlatformController {
   }
 
   @override
+  Future<String> resetUserScript(String userScriptString) {
+    return _channel.invokeMethod<String>('resetUserScript', userScriptString);
+  }
+
+  @override
   Future<String> loadHTMLString(String html, String url) {
     final List<String> args = [html, url];
     return _channel.invokeMethod<String>('loadHTMLString', args);

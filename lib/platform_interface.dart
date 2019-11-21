@@ -160,6 +160,11 @@ abstract class WebViewPlatformController {
         "WebView evaluateJavascript is not implemented on the current platform");
   }
 
+  Future<String> resetUserScript(String userScriptString) {
+    throw UnimplementedError(
+        "WebView resetUserScript is not implemented on the current platform");
+  }
+
   /// Sets the main page contents and base URL.
   Future<void> loadHTMLString(String html, String url) {
     throw UnimplementedError(

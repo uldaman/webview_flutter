@@ -681,6 +681,16 @@ class WebViewController {
     return _webViewPlatformController.evaluateJavascript(javascriptString);
   }
 
+  Future<String> resetUserScript(String userScriptString) {
+    if (_settings.javascriptMode == JavascriptMode.disabled)
+      return Future<String>.error(FlutterError(
+          'JavaScript mode must be enabled/unrestricted when calling resetUserScript.'));
+    if (userScriptString == null)
+      return Future<String>.error(
+          ArgumentError('The argument userScriptString must not be null.'));
+    return _webViewPlatformController.resetUserScript(userScriptString);
+  }
+
   /// Sets the main page contents and base URL.
   Future<void> loadHTMLString(String html, String url) {
     return _webViewPlatformController.loadHTMLString(html, url);

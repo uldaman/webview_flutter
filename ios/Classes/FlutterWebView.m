@@ -130,9 +130,11 @@
   } else if ([[call method] isEqualToString:@"takeScreenshot"]) {
     [self onTakeScreenshot:call result:result];
   } else if ([[call method] isEqualToString:@"clearCache"]) {
-    [self clearCache:result];
+    [self onClearCache:result];
   } else if ([[call method] isEqualToString:@"getTitle"]) {
     [self onGetTitle:result];
+  } else if ([[call method] isEqualToString:@"resetUserScript"]) {
+    [self onResetUserScript:call result:result];
   } else {
     result(FlutterMethodNotImplemented);
   }
@@ -230,7 +232,7 @@
              }];
 }
 
-- (void)clearCache:(FlutterResult)result {
+- (void)onClearCache:(FlutterResult)result {
   if (@available(iOS 9.0, *)) {
     NSSet* cacheDataTypes = [WKWebsiteDataStore allWebsiteDataTypes];
     WKWebsiteDataStore* dataStore = [WKWebsiteDataStore defaultDataStore];
@@ -275,6 +277,27 @@
 - (void)onGetTitle:(FlutterResult)result {
   NSString* title = _webView.title;
   result(title);
+}
+
+- (void)onResetUserScript:(FlutterMethodCall*)call result:(FlutterResult)result {
+  NSString* injectJavascript = [call arguments];
+  if (!injectJavascript) {
+    result([FlutterError errorWithCode:@"resetUserScript_failed"
+                               message:@"JavaScript String cannot be null"
+                               details:nil]);
+    return;
+  }
+
+  WKUserContentController* userContentController = _webView.configuration.userContentController;
+  [userContentController removeScriptMessageHandlerForName:@"flutter_webview"];
+  [userContentController removeAllUserScripts];
+
+  [self registerJavaScriptChannels:userContentController];
+
+  WKUserScript* script = [[WKUserScript alloc] initWithSource:injectJavascript injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:YES];
+  [userContentController addUserScript:script];
+
+  result(nil);
 }
 
 // Returns nil when successful, or an error message when one or more keys are unknown.
