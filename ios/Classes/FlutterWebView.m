@@ -48,8 +48,8 @@
               binaryMessenger:(NSObject<FlutterBinaryMessenger>*)messenger {
   if (self = [super init]) {
     _viewId = viewId;
-    
-    _prompt = args[@"prpmpt"];
+
+    _prompt = args[@"prompt"];
 
     NSString* channelName = [NSString stringWithFormat:@"plugins.flutter.io/webview_%lld", viewId];
     _channel = [FlutterMethodChannel methodChannelWithName:channelName binaryMessenger:messenger];
@@ -141,6 +141,8 @@
     [self onGetTitle:result];
   } else if ([[call method] isEqualToString:@"resetUserScript"]) {
     [self onResetUserScript:call result:result];
+  } else if ([[call method] isEqualToString:@"setprompt"]) {
+    [self onSetPrompt:call result:result];
   } else {
     result(FlutterMethodNotImplemented);
   }
@@ -304,6 +306,16 @@
   [userContentController addUserScript:script];
 
   result(nil);
+}
+
+- (void)onSetPrompt:(FlutterMethodCall*)call result:(FlutterResult)result {
+  NSString* prompt = [call arguments];
+  if (prompt) {
+    _prompt = prompt
+    result(nil);
+  } else {
+    result([FlutterError errorWithCode:@"setPromp_failed" message:@"Prompt String cannot be null" details:nil]);
+  }
 }
 
 // Returns nil when successful, or an error message when one or more keys are unknown.

@@ -136,7 +136,7 @@ class WebView extends StatefulWidget {
   const WebView({
     Key key,
     this.onWebViewCreated,
-    this.prpmpt,
+    this.prompt,
     this.injectJavascript,
     this.initialUrl,
     this.javascriptMode = JavascriptMode.disabled,
@@ -203,7 +203,7 @@ class WebView extends StatefulWidget {
   /// were not claimed by any other gesture recognizer.
   final Set<Factory<OneSequenceGestureRecognizer>> gestureRecognizers;
 
-  final String prpmpt;
+  final String prompt;
 
   /// The javascript injected at document start.
   final String injectJavascript;
@@ -386,7 +386,7 @@ class _WebViewState extends State<WebView> {
 
 CreationParams _creationParamsfromWidget(WebView widget) {
   return CreationParams(
-    prpmpt: widget.prpmpt,
+    prompt: widget.prompt,
     injectJavascript: widget.injectJavascript,
     initialUrl: widget.initialUrl,
     webSettings: _webSettingsFromWidget(widget),
