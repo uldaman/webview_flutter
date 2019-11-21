@@ -695,6 +695,12 @@ class WebViewController {
     return _webViewPlatformController.resetUserScript(userScriptString);
   }
 
+  Future<String> setPrompt(String promptString) => promptString == null
+      ? Future<String>.error(
+          ArgumentError('The argument userScriptString must not be null.'),
+        )
+      : _webViewPlatformController.setPrompt(promptString);
+
   /// Sets the main page contents and base URL.
   Future<void> loadHTMLString(String html, String url) {
     return _webViewPlatformController.loadHTMLString(html, url);

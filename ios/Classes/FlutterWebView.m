@@ -141,7 +141,7 @@
     [self onGetTitle:result];
   } else if ([[call method] isEqualToString:@"resetUserScript"]) {
     [self onResetUserScript:call result:result];
-  } else if ([[call method] isEqualToString:@"setprompt"]) {
+  } else if ([[call method] isEqualToString:@"setPrompt"]) {
     [self onSetPrompt:call result:result];
   } else {
     result(FlutterMethodNotImplemented);

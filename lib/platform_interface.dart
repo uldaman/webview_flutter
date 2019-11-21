@@ -165,6 +165,11 @@ abstract class WebViewPlatformController {
         "WebView resetUserScript is not implemented on the current platform");
   }
 
+  Future<String> setPrompt(String promptString) {
+    throw UnimplementedError(
+        "WebView setPrompt is not implemented on the current platform");
+  }
+
   /// Sets the main page contents and base URL.
   Future<void> loadHTMLString(String html, String url) {
     throw UnimplementedError(
