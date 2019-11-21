@@ -311,7 +311,7 @@
 - (void)onSetPrompt:(FlutterMethodCall*)call result:(FlutterResult)result {
   NSString* prompt = [call arguments];
   if (prompt) {
-    _prompt = prompt
+    _prompt = prompt;
     result(nil);
   } else {
     result([FlutterError errorWithCode:@"setPromp_failed" message:@"Prompt String cannot be null" details:nil]);

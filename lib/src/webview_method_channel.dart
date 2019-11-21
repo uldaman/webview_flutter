@@ -165,6 +165,7 @@ class MethodChannelWebViewPlatform implements WebViewPlatformController {
   static Map<String, dynamic> creationParamsToMap(
       CreationParams creationParams) {
     return <String, dynamic>{
+      'prompt': creationParams.prompt,
       'injectJavascript': creationParams.injectJavascript,
       'initialUrl': creationParams.initialUrl,
       'settings': _webSettingsToMap(creationParams.webSettings),
