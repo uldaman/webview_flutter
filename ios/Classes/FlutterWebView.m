@@ -57,6 +57,9 @@
                     inConfiguration:configuration];
     _webView = [[WKWebView alloc] initWithFrame:frame configuration:configuration];
 
+    FLTJavaScriptChannel* channel = [[FLTJavaScriptChannel alloc] initWithMethodChannel:_channel webView:_webView];
+    [configuration.userContentController addScriptMessageHandler:channel name:@"flutter_webview"];
+
     [self registerJavaScriptChannels:configuration.userContentController];
     NSString *injectJavascript = args[@"injectJavascript"];
     if (injectJavascript != (id)[NSNull null]) {
@@ -264,8 +267,8 @@
         [_webView loadHTMLString:@"" baseURL:nil];
         [_webView setNavigationDelegate:nil];
         [_webView setUIDelegate:nil];
-        [_webView.configuration.userContentController removeScriptMessageHandlerForName:@"flutter_webview"];
         [_webView.configuration.userContentController removeAllUserScripts];
+        [_webView.configuration.userContentController removeScriptMessageHandlerForName:@"flutter_webview"];
         [_webView removeObserver:self forKeyPath:@"estimatedProgress"];
         [_webView removeObserver:self forKeyPath:@"URL"];
         [_webView removeFromSuperview];
@@ -281,6 +284,7 @@
 
 - (void)onResetUserScript:(FlutterMethodCall*)call result:(FlutterResult)result {
   NSString* injectJavascript = [call arguments];
+
   if (!injectJavascript) {
     result([FlutterError errorWithCode:@"resetUserScript_failed"
                                message:@"JavaScript String cannot be null"
@@ -289,11 +293,10 @@
   }
 
   WKUserContentController* userContentController = _webView.configuration.userContentController;
-  [userContentController removeScriptMessageHandlerForName:@"flutter_webview"];
+
   [userContentController removeAllUserScripts];
 
   [self registerJavaScriptChannels:userContentController];
-
   WKUserScript* script = [[WKUserScript alloc] initWithSource:injectJavascript injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:YES];
   [userContentController addUserScript:script];
 
@@ -396,10 +399,6 @@
 }
 
 - (void)registerJavaScriptChannels:(WKUserContentController*)userContentController {
-  FLTJavaScriptChannel* channel =
-      [[FLTJavaScriptChannel alloc] initWithMethodChannel:_channel
-                                                  webView:_webView];
-  [userContentController addScriptMessageHandler:channel name:@"flutter_webview"];
   NSString* wrapperSource = @"(() => {"
       "var _callbacks = {};"
       "var _flutter_webview = webkit.messageHandlers.flutter_webview;"
