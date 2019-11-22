@@ -136,7 +136,7 @@ class WebView extends StatefulWidget {
   const WebView({
     Key key,
     this.onWebViewCreated,
-    this.prompt,
+    this.prompt = '',
     this.injectJavascript,
     this.initialUrl,
     this.javascriptMode = JavascriptMode.disabled,
@@ -152,7 +152,8 @@ class WebView extends StatefulWidget {
     this.userAgent,
     this.initialMediaPlaybackPolicy =
         AutoMediaPlaybackPolicy.require_user_action_for_all_media_types,
-  })  : assert(javascriptMode != null),
+  })  : assert(prompt != null),
+        assert(javascriptMode != null),
         assert(initialMediaPlaybackPolicy != null),
         super(key: key);
 
