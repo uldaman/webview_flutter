@@ -76,6 +76,8 @@
 
     [_webView addObserver:self forKeyPath:@"estimatedProgress" options:NSKeyValueObservingOptionNew context:NULL];
     [_webView addObserver:self forKeyPath:@"URL" options:NSKeyValueObservingOptionNew context:NULL];
+    [_webView addObserver:self forKeyPath:@"canGoBack" options:NSKeyValueObservingOptionNew context:NULL];
+    [_webView addObserver:self forKeyPath:@"canGoForward" options:NSKeyValueObservingOptionNew context:NULL];
 
     __weak __typeof__(self) weakSelf = self;
     [_channel setMethodCallHandler:^(FlutterMethodCall* call, FlutterResult result) {
@@ -103,8 +105,12 @@
         [_channel invokeMethod:@"onProgressChanged" arguments:@{@"progress": @(_webView.estimatedProgress)}];
     } else if ([keyPath isEqualToString:@"URL"] && object == _webView) {
         if (_webView.URL) {
-            [_channel invokeMethod:@"onURLChanged" arguments:@{@"url" : _webView.URL.absoluteString}];
+            [_channel invokeMethod:@"onURLChanged" arguments:@{@"url": _webView.URL.absoluteString}];
         }
+    } else if ([keyPath isEqualToString:@"canGoBack"] && object == _webView) {
+        [_channel invokeMethod:@"onCanGoBack" arguments:@{@"canGoBack": @(_webView.canGoBack)}];
+    } else if ([keyPath isEqualToString:@"canGoForward"] && object == _webView) {
+        [_channel invokeMethod:@"onCanGoForward" arguments:@{@"canGoForward": @(_webView.canGoForward)}];
     } else {
         [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
     }
@@ -267,19 +273,21 @@
 }
 
 -(void)dealloc {
-    if (_webView != nil) {
-        [_webView stopLoading];
-        [_webView loadHTMLString:@"" baseURL:nil];
-        [_webView setNavigationDelegate:nil];
-        [_webView setUIDelegate:nil];
-        [_webView.configuration.userContentController removeAllUserScripts];
-        [_webView.configuration.userContentController removeScriptMessageHandlerForName:@"flutter_webview"];
-        [_webView removeObserver:self forKeyPath:@"estimatedProgress"];
-        [_webView removeObserver:self forKeyPath:@"URL"];
-        [_webView removeFromSuperview];
-        _webView = nil;
-        _channel = nil;
-    }
+  if (_webView != nil) {
+    [_webView stopLoading];
+    [_webView loadHTMLString:@"" baseURL:nil];
+    [_webView setNavigationDelegate:nil];
+    [_webView setUIDelegate:nil];
+    [_webView.configuration.userContentController removeAllUserScripts];
+    [_webView.configuration.userContentController removeScriptMessageHandlerForName:@"flutter_webview"];
+    [_webView removeObserver:self forKeyPath:@"estimatedProgress"];
+    [_webView removeObserver:self forKeyPath:@"URL"];
+    [_webView removeObserver:self forKeyPath:@"canGoBack"];
+    [_webView removeObserver:self forKeyPath:@"canGoForward"];
+    [_webView removeFromSuperview];
+    _webView = nil;
+    _channel = nil;
+  }
 }
 
 - (void)onGetTitle:(FlutterResult)result {

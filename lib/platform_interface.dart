@@ -39,6 +39,9 @@ abstract class WebViewPlatformCallbacksHandler {
 
   /// Invoked by [WebViewPlatformController] when the current url is changed.
   void onURLChanged(String url);
+
+  void onCanGoBack(bool canGoBack);
+  void onCanGoForward(bool canGoForward);
 }
 
 /// Interface for talking to the webview's platform implementation.

@@ -75,6 +75,9 @@ typedef void ProgressChangedCallback(double progress);
 /// Invoked by [WebViewPlatformController] when the current url is changed.
 typedef void URLChangedCallback(String url);
 
+typedef void OnCanGoBackCallback(bool canGoBack);
+typedef void OnCanGoForwardCallback(bool canGoForward);
+
 /// Specifies possible restrictions on automatic media playback.
 ///
 /// This is typically used in [WebView.initialMediaPlaybackPolicy].
@@ -148,6 +151,8 @@ class WebView extends StatefulWidget {
     this.onDelegateError,
     this.onProgressChanged,
     this.onURLChanged,
+    this.onCanGoBack,
+    this.onCanGoForward,
     this.debuggingEnabled = false,
     this.userAgent,
     this.initialMediaPlaybackPolicy =
@@ -292,6 +297,9 @@ class WebView extends StatefulWidget {
 
   /// Invoked by [WebViewPlatformController] when the current url is changed.
   final URLChangedCallback onURLChanged;
+
+  final OnCanGoBackCallback onCanGoBack;
+  final OnCanGoForwardCallback onCanGoForward;
 
   /// Controls whether WebView debugging is enabled.
   ///
@@ -509,6 +517,20 @@ class _PlatformCallbacksHandler implements WebViewPlatformCallbacksHandler {
   void onURLChanged(String url) {
     if (_widget.onURLChanged != null) {
       _widget.onURLChanged(url);
+    }
+  }
+
+  @override
+  void onCanGoBack(bool canGoBack) {
+    if (_widget.onCanGoBack != null) {
+      _widget.onCanGoBack(canGoBack);
+    }
+  }
+
+  @override
+  void onCanGoForward(bool canGoForward) {
+    if (_widget.onCanGoForward != null) {
+      _widget.onCanGoForward(canGoForward);
     }
   }
 
