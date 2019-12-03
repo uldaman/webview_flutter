@@ -262,13 +262,13 @@
   }
 }
 
+// https://stackoverflow.com/a/24704237/6005699
 - (void)loadHTMLString:(FlutterMethodCall*)call result:(FlutterResult)result {
-  NSArray* arguments = [call arguments];
-  if ([arguments[1] isKindOfClass:[NSString class]]) {
-    [_webView loadHTMLString:arguments[0] baseURL:[NSURL URLWithString:arguments[1]]];
-  } else {
-    [_webView loadHTMLString:arguments[0] baseURL:nil];
-  }
+  NSData *data = [[call arguments] dataUsingEncoding:NSUTF8StringEncoding];
+  NSString *fileName = @"loadHTMLString.html";
+  NSURL *fileURL = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:fileName]];
+  [data writeToURL:fileURL atomically:NO];
+  [_webView loadRequest:[NSURLRequest requestWithURL:fileURL]];
   result(nil);
 }
 

@@ -174,7 +174,7 @@ abstract class WebViewPlatformController {
   }
 
   /// Sets the main page contents and base URL.
-  Future<void> loadHTMLString(String html, String url) {
+  Future<void> loadHTMLString(String html) {
     throw UnimplementedError(
         "WebView loadHTMLString is not implemented on the current platform");
   }

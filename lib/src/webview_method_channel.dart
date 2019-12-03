@@ -132,9 +132,8 @@ class MethodChannelWebViewPlatform implements WebViewPlatformController {
   }
 
   @override
-  Future<String> loadHTMLString(String html, String url) {
-    final List<String> args = [html, url];
-    return _channel.invokeMethod<String>('loadHTMLString', args);
+  Future<String> loadHTMLString(String html) {
+    return _channel.invokeMethod<String>('loadHTMLString', html);
   }
 
   @override

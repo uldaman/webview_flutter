@@ -725,8 +725,8 @@ class WebViewController {
       : _webViewPlatformController.setPrompt(promptString);
 
   /// Sets the main page contents and base URL.
-  Future<void> loadHTMLString(String html, String url) {
-    return _webViewPlatformController.loadHTMLString(html, url);
+  Future<void> loadHTMLString(String html) {
+    return _webViewPlatformController.loadHTMLString(html);
   }
 }
 
