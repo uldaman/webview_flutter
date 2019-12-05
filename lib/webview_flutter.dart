@@ -659,6 +659,9 @@ class WebViewController {
     return reload();
   }
 
+  Future<void> goHomePage() async =>
+      await _webViewPlatformController.goHomePage();
+
   Future<void> _updateWidget(WebView widget) async {
     _widget = widget;
     await _updateSettings(_webSettingsFromWidget(widget));

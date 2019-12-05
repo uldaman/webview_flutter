@@ -149,6 +149,8 @@
     [self onResetUserScript:call result:result];
   } else if ([[call method] isEqualToString:@"setPrompt"]) {
     [self onSetPrompt:call result:result];
+  } else if ([[call method] isEqualToString:@"goHomePage"]) {
+     [self onGoHomePage:result];
   } else {
     result(FlutterMethodNotImplemented);
   }
@@ -269,6 +271,11 @@
   NSURL *fileURL = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:fileName]];
   [data writeToURL:fileURL atomically:NO];
   [_webView loadRequest:[NSURLRequest requestWithURL:fileURL]];
+  result(nil);
+}
+
+- (void) onGoHomePage:(FlutterResult)result {
+  [_webView loadHTMLString:@"" baseURL:nil];
   result(nil);
 }
 

@@ -107,6 +107,9 @@ class MethodChannelWebViewPlatform implements WebViewPlatformController {
   Future<void> clearCache() => _channel.invokeMethod<void>("clearCache");
 
   @override
+  Future<void> goHomePage() => _channel.invokeMethod<void>("goHomePage");
+
+  @override
   Future<void> updateSettings(WebSettings settings) {
     final Map<String, dynamic> updatesMap = _webSettingsToMap(settings);
     if (updatesMap.isEmpty) {

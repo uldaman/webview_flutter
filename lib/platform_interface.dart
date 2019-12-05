@@ -154,6 +154,11 @@ abstract class WebViewPlatformController {
         "WebView clearCache is not implemented on the current platform");
   }
 
+  Future<void> goHomePage() {
+    throw UnimplementedError(
+        "WebView goHomePage is not implemented on the current platform");
+  }
+
   /// Evaluates a JavaScript expression in the context of the current page.
   ///
   /// The Future completes with an error if a JavaScript error occurred, or if the type of the
