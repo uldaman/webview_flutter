@@ -70,6 +70,9 @@
 
 - (void)webView:(WKWebView *)webView didFailProvisionalNavigation:(WKNavigation *)navigation
 withError:(NSError *)error {
+  if ([error.domain isEqual:NSURLErrorDomain] && (error.code == NSURLErrorCancelled)){
+      return;
+  }
   [_methodChannel invokeMethod:@"onDelegateError" arguments:@{@"error" : error.localizedDescription}];
 }
 
