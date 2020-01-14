@@ -215,14 +215,12 @@
 }
 
 - (void)onTakeScreenshot:(FlutterMethodCall*)call result:(FlutterResult)result {
-    [_webView takeSnapshotWithConfiguration:nil
-                              completionHandler:^(UIImage * _Nullable snapshotImage, NSError * _Nullable error) {
-                                  if (snapshotImage) {
-                                    result(UIImagePNGRepresentation(snapshotImage));
-                                  } else {
-                                    result(nil);
-                                  }
-                              }];
+  UIGraphicsBeginImageContextWithOptions(_webView.frame.size, false, [UIScreen mainScreen].scale);
+  CGRect rect = CGRectMake(0, -_webView.scrollView.contentInset.top,  _webView.frame.size.width, _webView.frame.size.height);
+  [_webView drawViewHierarchyInRect:rect afterScreenUpdates:false];
+  UIImage* image = UIGraphicsGetImageFromCurrentImageContext();
+  UIGraphicsEndImageContext();
+  result(UIImagePNGRepresentation(image));
 }
 
 - (void)onEvaluateJavaScript:(FlutterMethodCall*)call result:(FlutterResult)result {
